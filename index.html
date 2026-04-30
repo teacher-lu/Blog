@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI SEO 自动化内容工作台</title>
+    <title>AI SEO 自动化内容工作台 (DeepSeek 驱动)</title>
     <style>
         :root {
             --bg-color: #f3f4f6; --panel-bg: #ffffff; --text-main: #1f2937; --text-muted: #6b7280;
             --border-color: #e5e7eb; --primary: #3b82f6; --primary-hover: #2563eb;
-            --success: #10b981; --processing: #f59e0b; --input-bg: #f9fafb;
+            --success: #10b981; --processing: #8b5cf6; --input-bg: #f9fafb;
         }
         [data-theme="dark"] {
             --bg-color: #0f172a; --panel-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
@@ -17,13 +17,13 @@
         * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s; }
         body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; height: 100vh; overflow: hidden; }
         
-        /* 核心布局：三栏 CSS Grid */
         .dashboard { display: grid; grid-template-columns: 350px 300px 1fr; gap: 20px; height: 100%; max-width: 1600px; margin: 0 auto; }
         .panel { background-color: var(--panel-bg); border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
         .panel-content { padding: 20px; overflow-y: auto; flex: 1; }
+        .panel-content::-webkit-scrollbar { width: 6px; }
+        .panel-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
 
-        /* 左侧表单区 */
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500; }
         input[type="text"], input[type="url"] { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem; }
@@ -31,11 +31,10 @@
         .submit-btn { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
         
-        /* 图片预览小方块 */
         .preview-grid { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); }
 
-        /* 中间状态流转区 (Timeline) */
+        /* Timeline 进度条样式 */
         .step { display: flex; margin-bottom: 25px; position: relative; opacity: 0.4; transition: opacity 0.3s; }
         .step::after { content: ''; position: absolute; left: 14px; top: 30px; bottom: -25px; width: 2px; background-color: var(--border-color); z-index: 1; }
         .step:last-child::after { display: none; }
@@ -44,28 +43,30 @@
         .step-title { font-weight: 600; font-size: 0.95rem; }
         .step-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
         
-        /* 状态样式控制 */
         .step.active { opacity: 1; }
         .step.active .step-icon { background-color: var(--processing); color: white; animation: pulse 1.5s infinite; }
         .step.done { opacity: 1; }
         .step.done .step-icon { background-color: var(--success); color: white; }
         .step.done::after { background-color: var(--success); }
 
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); } }
 
-        /* 右侧渲染区 */
-        #preview-box { background-color: #fff; color: #333; padding: 30px; min-height: 100%; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); line-height: 1.6; }
-        #preview-box h1 { font-size: 1.8rem; margin-top: 0; }
-        #preview-box h2 { font-size: 1.4rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        #preview-box img { max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0; }
+        /* 右侧文章渲染区 */
+        #preview-box { background-color: #fff; color: #333; padding: 30px; min-height: 100%; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); line-height: 1.7; font-size: 1.05rem; }
+        #preview-box h1 { font-size: 1.8rem; margin-top: 0; color: #111; }
+        #preview-box h2 { font-size: 1.4rem; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 1.5em; color: #222; }
+        #preview-box h3 { font-size: 1.2rem; color: #333; }
+        #preview-box img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; display: block; }
+        #preview-box a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        #preview-box a:hover { text-decoration: underline; }
         
-        .placeholder-text { display: flex; justify-content: center; align-items: center; height: 100%; color: var(--text-muted); text-align: center; font-size: 1.1rem; }
+        .placeholder-text { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: var(--text-muted); text-align: center; font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
 <div class="dashboard">
-    <!-- 左侧：用户输入区 -->
+    <!-- 左侧：输入控制台 -->
     <div class="panel">
         <div class="panel-header">
             <span>✍️ 创作配置面板</span>
@@ -73,38 +74,38 @@
         </div>
         <div class="panel-content">
             <form id="article-form">
-                <div class="form-group"><label>文章主题 (Topic)</label><input type="text" id="topic" placeholder="输入核心主题" required></div>
-                <div class="form-group"><label>关键词 (Keywords)</label><input type="text" id="keywords" placeholder="用逗号隔开" required></div>
-                <div class="form-group"><label>内链产品名称</label><input type="text" id="p_name" placeholder="如: 专业登山包" required></div>
-                <div class="form-group"><label>内链 URL</label><input type="url" id="p_link" placeholder="https://..." required></div>
+                <div class="form-group"><label>文章主题 (Topic) *</label><input type="text" id="topic" placeholder="输入核心主题" required></div>
+                <div class="form-group"><label>关键词 (Keywords) *</label><input type="text" id="keywords" placeholder="用逗号隔开" required></div>
+                <div class="form-group"><label>内链产品名称 *</label><input type="text" id="p_name" placeholder="如: Thesis Hard Cover" required></div>
+                <div class="form-group"><label>内链 URL *</label><input type="url" id="p_link" placeholder="https://..." required></div>
                 <div class="form-group">
                     <label>参考资料图 (最多5张)</label>
                     <input type="file" id="images" accept="image/*" multiple style="font-size: 0.8rem;">
                     <div class="preview-grid" id="preview-area"></div>
                 </div>
-                <button type="submit" class="submit-btn" id="sub-btn">🚀 开始自动化生成</button>
+                <button type="submit" class="submit-btn" id="sub-btn">🚀 深度思考并生成</button>
             </form>
         </div>
     </div>
 
-    <!-- 中间：工作流可视化区 -->
+    <!-- 中间：工作流监控 -->
     <div class="panel">
-        <div class="panel-header">⚙️ n8n 运行状态</div>
+        <div class="panel-header">⚙️ 引擎运行状态</div>
         <div class="panel-content" id="workflow-steps">
-            <div class="step" id="step-1"><div class="step-icon">1</div><div class="step-content"><div class="step-title">接收与准备数据</div><div class="step-desc">解析前端提交的变量...</div></div></div>
-            <div class="step" id="step-2"><div class="step-icon">2</div><div class="step-content"><div class="step-title">Gemini 创作文章</div><div class="step-desc">应用 SEO & E-E-A-T 策略...</div></div></div>
-            <div class="step" id="step-3"><div class="step-icon">3</div><div class="step-content"><div class="step-title">解析图片提示词</div><div class="step-desc">提取占位符与 Prompt...</div></div></div>
-            <div class="step" id="step-4"><div class="step-icon">4</div><div class="step-content"><div class="step-title">并发生成 AI 配图</div><div class="step-desc">请求云雾 AI 绘制高质量图像...</div></div></div>
-            <div class="step" id="step-5"><div class="step-icon">5</div><div class="step-content"><div class="step-title">代码组装与排版</div><div class="step-desc">替换图片标签与植入产品内链...</div></div></div>
+            <div class="step" id="step-1"><div class="step-icon">1</div><div class="step-content"><div class="step-title">接收与准备数据</div><div class="step-desc">解析前端变量...</div></div></div>
+            <div class="step" id="step-2"><div class="step-icon">2</div><div class="step-content"><div class="step-title">DeepSeek 深度思考</div><div class="step-desc">正在应用 SEO & E-E-A-T 策略撰写...</div></div></div>
+            <div class="step" id="step-3"><div class="step-icon">3</div><div class="step-content"><div class="step-title">智能提取提示词</div><div class="step-desc">解析图像生成 Prompt...</div></div></div>
+            <div class="step" id="step-4"><div class="step-icon">4</div><div class="step-content"><div class="step-title">并发生成 AI 配图</div><div class="step-desc">调用云雾 API 绘制插图...</div></div></div>
+            <div class="step" id="step-5"><div class="step-icon">5</div><div class="step-content"><div class="step-title">装配与回传数据</div><div class="step-desc">图文合并，生成最终 HTML...</div></div></div>
         </div>
     </div>
 
-    <!-- 右侧：最终结果预览区 -->
+    <!-- 右侧：最终结果 -->
     <div class="panel">
         <div class="panel-header">👁️ 最终效果预览</div>
-        <div class="panel-content" style="background-color: #f1f5f9; padding: 15px;">
+        <div class="panel-content" style="background-color: #f8fafc; padding: 15px;">
             <div id="preview-box">
-                <div class="placeholder-text">填写左侧信息并点击生成<br>生成的完美图文将在这里渲染显示</div>
+                <div class="placeholder-text">填写左侧信息并点击生成<br><span style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">DeepSeek 模型深度思考约需 30-60 秒，请耐心等待</span></div>
             </div>
         </div>
     </div>
@@ -119,7 +120,7 @@
         themeBtn.textContent = isDark ? '🌙' : '☀️';
     };
 
-    // 2. 图片转 Base64 与预览
+    // 2. 图片预览处理
     let base64Files = [];
     document.getElementById('images').onchange = async (e) => {
         const files = Array.from(e.target.files).slice(0, 5);
@@ -139,26 +140,22 @@
         }));
     };
 
-    // 3. UI 状态流转控制机 (模拟 n8n 节点运行时间)
+    // 3. 进度条动画控制 (专为 DeepSeek 优化了等待时长)
     let simInterval;
     function startProgressSimulation() {
         const steps = [
-            { id: 1, duration: 2000 },  // 数据准备很快
-            { id: 2, duration: 15000 }, // Gemini 思考较长
-            { id: 3, duration: 2000 },  // 解析极快
-            { id: 4, duration: 20000 }, // 生图最慢
-            { id: 5, duration: 2000 }   // 组装极快
+            { id: 1, duration: 1000 },   // 接收极快
+            { id: 2, duration: 35000 },  // DeepSeek 深度思考耗时较长 (设为35秒)
+            { id: 3, duration: 2000 },   // 提取极快
+            { id: 4, duration: 15000 },  // 云雾 AI 绘图约 15 秒
+            { id: 5, duration: 2000 }    // 合并极快
         ];
-        
         let currentStep = 0;
-        
         const advanceStep = () => {
-            // 清理旧状态
             if(currentStep > 0) {
                 const prev = document.getElementById(`step-${currentStep}`);
                 if(prev) { prev.classList.remove('active'); prev.classList.add('done'); prev.querySelector('.step-icon').innerHTML = '✓'; }
             }
-            // 开启新状态
             currentStep++;
             if(currentStep <= steps.length) {
                 const curr = document.getElementById(`step-${currentStep}`);
@@ -187,23 +184,22 @@
         }
     }
 
-    // 4. 表单提交与核心逻辑
+    // 4. 表单提交核心逻辑
     document.getElementById('article-form').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('sub-btn');
         const previewBox = document.getElementById('preview-box');
         
-        // 界面初始化
-        btn.disabled = true; btn.textContent = "⚙️ 工作流全速运行中...";
-        previewBox.innerHTML = '<div class="placeholder-text">🚀 正在等待 n8n 引擎合成文章...</div>';
+        btn.disabled = true; btn.textContent = "🧠 引擎高速运转中...";
+        previewBox.innerHTML = '<div class="placeholder-text"><div style="font-size:2rem; margin-bottom:15px;">⏳</div>正在耐心等待 DeepSeek 深度思考与图文合成...</div>';
         resetSteps();
-        
-        // 启动视觉进度条
         startProgressSimulation();
         
         try {
-            // 【⚠️ 记得填入你的 N8N Webhook 地址】
-            const response = await fetch("https://api.wallyai.top/webhook/article-gen", {
+            // 【⚠️ 替换为你的正式/测试 Webhook 地址】
+            const N8N_WEBHOOK_URL = "https://api.wallyai.top/webhook/article-gen";
+
+            const response = await fetch(N8N_WEBHOOK_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -217,21 +213,49 @@
 
             if (response.ok) {
                 const data = await response.json();
-                completeAllSteps(); // 接口返回成功，瞬间强制把所有步骤点亮为完成
+                console.log("n8n 返回的原始数据:", data); 
+                completeAllSteps(); 
                 
-                // 提取 n8n 传回来的最终 HTML 代码，并清洗换行符，渲染在右侧
-                let finalHtml = data.final_article_html || data[0]?.final_article_html || "获取结果失败";
+                let finalHtml = "";
+                // 适配 Respond to Webhook 可能返回的数组或对象格式
+                if (Array.isArray(data) && data.length > 0) {
+                    finalHtml = data[0].final_article_html || "";
+                } else if (data && typeof data === 'object') {
+                    finalHtml = data.final_article_html || "";
+                }
+
+                if (!finalHtml) {
+                     finalHtml = "<p>数据获取成功，但未能在 JSON 中找到 final_article_html 字段。</p>";
+                }
+
+                // 终极清洗：消除可能遗留的转义符
                 finalHtml = finalHtml.replace(/\\n/g, '').replace(/\n/g, ''); 
                 previewBox.innerHTML = finalHtml;
 
             } else {
-                throw new Error("HTTP " + response.status);
+                throw new Error(`HTTP 状态码: ${response.status}`);
             }
         } catch (error) {
             clearTimeout(simInterval);
-            previewBox.innerHTML = `<div class="placeholder-text" style="color:#ef4444;">❌ 请求失败: ${error.message} <br>请检查 n8n 状态或 Webhook 地址是否正确。</div>`;
+            console.error("请求被中断:", error);
+            
+            let errorMsg = error.message;
+            if (error.message.includes('Failed to fetch')) {
+                errorMsg = `网络请求被切断。请排查：<br><br>
+                            1. <b>超时问题 (最可能)：</b>DeepSeek 耗时较长，请确保 Nginx/宝塔 的超时时间大于 120 秒。<br>
+                            2. <b>CORS 跨域：</b>确保 n8n Webhook 节点开启了响应跨域。<br>
+                            3. <b>文件体积：</b>若上传了图片，请检查 Nginx 的 client_max_body_size。`;
+            }
+            previewBox.innerHTML = `<div class="placeholder-text" style="color:#ef4444; text-align:left; font-size: 1rem; width: 80%;">
+                <b>❌ 生成失败:</b><br><br>${errorMsg}
+            </div>`;
+            
+            // 失败时进度条停滞显红
+            document.querySelectorAll('.step.active .step-icon').forEach(el => {
+                el.style.backgroundColor = '#ef4444'; el.style.animation = 'none';
+            });
         } finally {
-            btn.disabled = false; btn.textContent = "🚀 开始自动化生成";
+            btn.disabled = false; btn.textContent = "🚀 深度思考并生成";
         }
     };
 </script>
