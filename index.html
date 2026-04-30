@@ -93,9 +93,9 @@
         <div class="panel-header">⚙️ 引擎运行状态</div>
         <div class="panel-content" id="workflow-steps">
             <div class="step" id="step-1"><div class="step-icon">1</div><div class="step-content"><div class="step-title">接收与准备数据</div><div class="step-desc">解析前端变量...</div></div></div>
-            <div class="step" id="step-2"><div class="step-icon">2</div><div class="step-content"><div class="step-title">DeepSeek 深度思考</div><div class="step-desc">正在应用 SEO & E-E-A-T 策略撰写...</div></div></div>
+            <div class="step" id="step-2"><div class="step-icon">2</div><div class="step-content"><div class="step-title">AI深度思考</div><div class="step-desc">正在应用 SEO & E-E-A-T 策略撰写...</div></div></div>
             <div class="step" id="step-3"><div class="step-icon">3</div><div class="step-content"><div class="step-title">智能提取提示词</div><div class="step-desc">解析图像生成 Prompt...</div></div></div>
-            <div class="step" id="step-4"><div class="step-icon">4</div><div class="step-content"><div class="step-title">并发生成 AI 配图</div><div class="step-desc">调用云雾 API 绘制插图...</div></div></div>
+            <div class="step" id="step-4"><div class="step-icon">4</div><div class="step-content"><div class="step-title">并发生成 AI 配图</div><div class="step-desc">调用API 绘制插图...</div></div></div>
             <div class="step" id="step-5"><div class="step-icon">5</div><div class="step-content"><div class="step-title">装配与回传数据</div><div class="step-desc">图文合并，生成最终 HTML...</div></div></div>
         </div>
     </div>
@@ -144,11 +144,11 @@
     let simInterval;
     function startProgressSimulation() {
         const steps = [
-            { id: 1, duration: 1000 },   // 接收极快
+            { id: 1, duration: 3000 },   // 接收极快
             { id: 2, duration: 35000 },  // DeepSeek 深度思考耗时较长 (设为35秒)
-            { id: 3, duration: 2000 },   // 提取极快
-            { id: 4, duration: 15000 },  // 云雾 AI 绘图约 15 秒
-            { id: 5, duration: 2000 }    // 合并极快
+            { id: 3, duration: 5000 },   // 提取极快
+            { id: 4, duration: 40000 },  // 云雾 AI 绘图约 15 秒
+            { id: 5, duration: 5000 }    // 合并极快
         ];
         let currentStep = 0;
         const advanceStep = () => {
@@ -191,7 +191,7 @@
         const previewBox = document.getElementById('preview-box');
         
         btn.disabled = true; btn.textContent = "🧠 引擎高速运转中...";
-        previewBox.innerHTML = '<div class="placeholder-text"><div style="font-size:2rem; margin-bottom:15px;">⏳</div>正在耐心等待 DeepSeek 深度思考与图文合成...</div>';
+        previewBox.innerHTML = '<div class="placeholder-text"><div style="font-size:2rem; margin-bottom:15px;">⏳</div>正在耐心等待AI深度思考与图文合成...</div>';
         resetSteps();
         startProgressSimulation();
         
@@ -243,10 +243,7 @@
             
             let errorMsg = error.message;
             if (error.message.includes('Failed to fetch')) {
-                errorMsg = `网络请求被切断。请排查：<br><br>
-                            1. <b>超时问题 (最可能)：</b>DeepSeek 耗时较长，请确保 Nginx/宝塔 的超时时间大于 120 秒。<br>
-                            2. <b>CORS 跨域：</b>确保 n8n Webhook 节点开启了响应跨域。<br>
-                            3. <b>文件体积：</b>若上传了图片，请检查 Nginx 的 client_max_body_size。`;
+                errorMsg = `网络请求超时被切断<br><br>
             }
             previewBox.innerHTML = `<div class="placeholder-text" style="color:#ef4444; text-align:left; font-size: 1rem; width: 80%;">
                 <b>❌ 生成失败:</b><br><br>${errorMsg}
@@ -257,7 +254,7 @@
                 el.style.backgroundColor = '#ef4444'; el.style.animation = 'none';
             });
         } finally {
-            btn.disabled = false; btn.textContent = "🚀 深度思考并生成";
+            btn.disabled = false; btn.textContent = "🚀 深度思考并生成文章";
         }
     };
 </script>
