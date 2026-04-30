@@ -3,311 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 自动化文章生成器</title>
+    <title>AI SEO 自动化内容工作台</title>
     <style>
         :root {
-            --bg-color: #f3f4f6;
-            --container-bg: #ffffff;
-            --text-color: #1f2937;
-            --text-muted: #6b7280;
-            --border-color: #d1d5db;
-            --primary-color: #3b82f6;
-            --primary-hover: #2563eb;
-            --input-bg: #ffffff;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --bg-color: #f3f4f6; --panel-bg: #ffffff; --text-main: #1f2937; --text-muted: #6b7280;
+            --border-color: #e5e7eb; --primary: #3b82f6; --primary-hover: #2563eb;
+            --success: #10b981; --processing: #f59e0b; --input-bg: #f9fafb;
         }
-
         [data-theme="dark"] {
-            --bg-color: #111827;
-            --container-bg: #1f2937;
-            --text-color: #f9fafb;
-            --text-muted: #9ca3af;
-            --border-color: #374151;
-            --primary-color: #60a5fa;
-            --primary-hover: #3b82f6;
-            --input-bg: #374151;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            --bg-color: #0f172a; --panel-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border-color: #334155; --primary: #3b82f6; --input-bg: #0f172a;
         }
+        * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s; }
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; height: 100vh; overflow: hidden; }
+        
+        /* 核心布局：三栏 CSS Grid */
+        .dashboard { display: grid; grid-template-columns: 350px 300px 1fr; gap: 20px; height: 100%; max-width: 1600px; margin: 0 auto; }
+        .panel { background-color: var(--panel-bg); border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .panel-content { padding: 20px; overflow-y: auto; flex: 1; }
 
-        * {
-            box-sizing: border-box;
-            transition: background-color 0.3s, color 0.3s;
-        }
+        /* 左侧表单区 */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500; }
+        input[type="text"], input[type="url"] { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem; }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+        .submit-btn { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        /* 图片预览小方块 */
+        .preview-grid { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+        /* 中间状态流转区 (Timeline) */
+        .step { display: flex; margin-bottom: 25px; position: relative; opacity: 0.4; transition: opacity 0.3s; }
+        .step::after { content: ''; position: absolute; left: 14px; top: 30px; bottom: -25px; width: 2px; background-color: var(--border-color); z-index: 1; }
+        .step:last-child::after { display: none; }
+        .step-icon { width: 30px; height: 30px; border-radius: 50%; background-color: var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; z-index: 2; color: var(--text-main); }
+        .step-content { margin-left: 15px; flex: 1; padding-top: 5px; }
+        .step-title { font-weight: 600; font-size: 0.95rem; }
+        .step-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+        
+        /* 状态样式控制 */
+        .step.active { opacity: 1; }
+        .step.active .step-icon { background-color: var(--processing); color: white; animation: pulse 1.5s infinite; }
+        .step.done { opacity: 1; }
+        .step.done .step-icon { background-color: var(--success); color: white; }
+        .step.done::after { background-color: var(--success); }
 
-        .container {
-            background-color: var(--container-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            width: 100%;
-            max-width: 650px;
-        }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-
-        .theme-toggle {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-color);
-        }
-
-        .form-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            flex: 1;
-            margin-bottom: 20px;
-        }
-
-        .form-row .form-group {
-            margin-bottom: 0;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        input[type="text"], input[type="url"] {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            font-size: 1rem;
-        }
-
-        input[type="text"]:focus, input[type="url"]:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-
-        input[type="file"] {
-            display: block;
-            margin-bottom: 10px;
-            color: var(--text-color);
-        }
-
-        .preview-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .preview-image {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .submit-btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .submit-btn:disabled {
-            background-color: var(--text-muted);
-            cursor: not-allowed;
-        }
-
-        #status-msg {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 0.9rem;
-            min-height: 20px;
-        }
-
-        .success { color: #10b981; }
-        .error { color: #ef4444; }
-        .loading { color: var(--primary-color); }
+        /* 右侧渲染区 */
+        #preview-box { background-color: #fff; color: #333; padding: 30px; min-height: 100%; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); line-height: 1.6; }
+        #preview-box h1 { font-size: 1.8rem; margin-top: 0; }
+        #preview-box h2 { font-size: 1.4rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        #preview-box img { max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0; }
+        
+        .placeholder-text { display: flex; justify-content: center; align-items: center; height: 100%; color: var(--text-muted); text-align: center; font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h1>博客自动生成与发布</h1>
-            <button class="theme-toggle" id="theme-btn" title="切换白天/黑夜模式">🌙</button>
+<div class="dashboard">
+    <!-- 左侧：用户输入区 -->
+    <div class="panel">
+        <div class="panel-header">
+            <span>✍️ 创作配置面板</span>
+            <button class="theme-toggle" id="theme-btn" style="background:none;border:none;cursor:pointer;font-size:1.2rem;">🌙</button>
         </div>
-
-        <form id="article-form">
-            <div class="form-group">
-                <label for="topic">文章主题 (Topic) *</label>
-                <input type="text" id="topic" placeholder="例如：如何在户外运动中保护膝盖" required>
-            </div>
-
-            <div class="form-group">
-                <label for="keywords">核心关键词 (Keywords) *</label>
-                <input type="text" id="keywords" placeholder="例如：户外运动, 护膝, 登山装备" required>
-            </div>
-
-            <div class="form-row">
+        <div class="panel-content">
+            <form id="article-form">
+                <div class="form-group"><label>文章主题 (Topic)</label><input type="text" id="topic" placeholder="输入核心主题" required></div>
+                <div class="form-group"><label>关键词 (Keywords)</label><input type="text" id="keywords" placeholder="用逗号隔开" required></div>
+                <div class="form-group"><label>内链产品名称</label><input type="text" id="p_name" placeholder="如: 专业登山包" required></div>
+                <div class="form-group"><label>内链 URL</label><input type="url" id="p_link" placeholder="https://..." required></div>
                 <div class="form-group">
-                    <label for="product_name">产品名称/锚文本 *</label>
-                    <input type="text" id="product_name" placeholder="例如：高级透气运动护膝" required>
+                    <label>参考资料图 (最多5张)</label>
+                    <input type="file" id="images" accept="image/*" multiple style="font-size: 0.8rem;">
+                    <div class="preview-grid" id="preview-area"></div>
                 </div>
-                <div class="form-group">
-                    <label for="product_link">产品链接 (URL) *</label>
-                    <input type="url" id="product_link" placeholder="https://yoursite.com/product/..." required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="images">参考图片 (最多 5 张)</label>
-                <input type="file" id="images" accept="image/png, image/jpeg, image/jpg, image/webp" multiple>
-                <div class="preview-container" id="preview-container"></div>
-                <small style="color: var(--text-muted);">辅助大模型理解，支持 JPG, PNG格式</small>
-            </div>
-
-            <button type="submit" class="submit-btn" id="submit-btn">开始生成图文</button>
-        </form>
-
-        <div id="status-msg"></div>
+                <button type="submit" class="submit-btn" id="sub-btn">🚀 开始自动化生成</button>
+            </form>
+        </div>
     </div>
 
-    <script>
-        // 白天/黑夜模式切换
-        const themeBtn = document.getElementById('theme-btn');
-        let isDarkMode = false;
-        themeBtn.addEventListener('click', () => {
-            isDarkMode = !isDarkMode;
-            document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : '');
-            themeBtn.textContent = isDarkMode ? '☀️' : '🌙';
-        });
+    <!-- 中间：工作流可视化区 -->
+    <div class="panel">
+        <div class="panel-header">⚙️ n8n 运行状态</div>
+        <div class="panel-content" id="workflow-steps">
+            <div class="step" id="step-1"><div class="step-icon">1</div><div class="step-content"><div class="step-title">接收与准备数据</div><div class="step-desc">解析前端提交的变量...</div></div></div>
+            <div class="step" id="step-2"><div class="step-icon">2</div><div class="step-content"><div class="step-title">Gemini 创作文章</div><div class="step-desc">应用 SEO & E-E-A-T 策略...</div></div></div>
+            <div class="step" id="step-3"><div class="step-icon">3</div><div class="step-content"><div class="step-title">解析图片提示词</div><div class="step-desc">提取占位符与 Prompt...</div></div></div>
+            <div class="step" id="step-4"><div class="step-icon">4</div><div class="step-content"><div class="step-title">并发生成 AI 配图</div><div class="step-desc">请求云雾 AI 绘制高质量图像...</div></div></div>
+            <div class="step" id="step-5"><div class="step-icon">5</div><div class="step-content"><div class="step-title">代码组装与排版</div><div class="step-desc">替换图片标签与植入产品内链...</div></div></div>
+        </div>
+    </div>
 
-        // 图片选择与预览逻辑
-        const imageInput = document.getElementById('images');
-        const previewContainer = document.getElementById('preview-container');
-        let selectedFiles = [];
+    <!-- 右侧：最终结果预览区 -->
+    <div class="panel">
+        <div class="panel-header">👁️ 最终效果预览</div>
+        <div class="panel-content" style="background-color: #f1f5f9; padding: 15px;">
+            <div id="preview-box">
+                <div class="placeholder-text">填写左侧信息并点击生成<br>生成的完美图文将在这里渲染显示</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        imageInput.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
-            if (files.length > 5) {
-                alert("最多只能上传 5 张图片！");
-                imageInput.value = ""; 
-                previewContainer.innerHTML = "";
-                selectedFiles = [];
-                return;
-            }
+<script>
+    // 1. 黑白模式切换
+    const themeBtn = document.getElementById('theme-btn');
+    themeBtn.onclick = () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
+        themeBtn.textContent = isDark ? '🌙' : '☀️';
+    };
 
-            selectedFiles = files;
-            previewContainer.innerHTML = ""; 
-
-            files.forEach(file => {
+    // 2. 图片转 Base64 与预览
+    let base64Files = [];
+    document.getElementById('images').onchange = async (e) => {
+        const files = Array.from(e.target.files).slice(0, 5);
+        const previewArea = document.getElementById('preview-area');
+        previewArea.innerHTML = '';
+        base64Files = await Promise.all(files.map(file => {
+            return new Promise(resolve => {
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = (ex) => {
                     const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'preview-image';
-                    previewContainer.appendChild(img);
+                    img.src = ex.target.result; img.className = 'preview-img';
+                    previewArea.appendChild(img);
+                    resolve(ex.target.result);
                 };
                 reader.readAsDataURL(file);
             });
-        });
+        }));
+    };
 
-        const fileToBase64 = (file) => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
-
-        // 表单提交
-        const form = document.getElementById('article-form');
-        const submitBtn = document.getElementById('submit-btn');
-        const statusMsg = document.getElementById('status-msg');
-
-        // 【！！！重要！！！】在这里填入你 n8n 的 Webhook URL
-        const N8N_WEBHOOK_URL = "https://api.wallyai.top/webhook/article-gen"; 
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = "数据处理中，请稍候...";
-            statusMsg.textContent = "正在上传数据至 n8n 工作流...";
-            statusMsg.className = "loading";
-
-            try {
-                const base64Images = await Promise.all(selectedFiles.map(file => fileToBase64(file)));
-
-                const payload = {
-                    topic: document.getElementById('topic').value.trim(),
-                    keywords: document.getElementById('keywords').value.trim(),
-                    product_name: document.getElementById('product_name').value.trim(),
-                    product_link: document.getElementById('product_link').value.trim(),
-                    reference_images: base64Images 
-                };
-
-                const response = await fetch(N8N_WEBHOOK_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    statusMsg.textContent = "✅ 工作流已成功触发！文章正在自动生成中。";
-                    statusMsg.className = "success";
-                    form.reset();
-                    previewContainer.innerHTML = "";
-                    selectedFiles = [];
-                } else {
-                    throw new Error(`HTTP 错误: ${response.status}`);
-                }
-            } catch (error) {
-                console.error("Webhook Error:", error);
-                statusMsg.textContent = "❌ 请求失败，请检查网络或 Webhook 地址配置。";
-                statusMsg.className = "error";
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = "开始生成图文";
+    // 3. UI 状态流转控制机 (模拟 n8n 节点运行时间)
+    let simInterval;
+    function startProgressSimulation() {
+        const steps = [
+            { id: 1, duration: 2000 },  // 数据准备很快
+            { id: 2, duration: 15000 }, // Gemini 思考较长
+            { id: 3, duration: 2000 },  // 解析极快
+            { id: 4, duration: 20000 }, // 生图最慢
+            { id: 5, duration: 2000 }   // 组装极快
+        ];
+        
+        let currentStep = 0;
+        
+        const advanceStep = () => {
+            // 清理旧状态
+            if(currentStep > 0) {
+                const prev = document.getElementById(`step-${currentStep}`);
+                if(prev) { prev.classList.remove('active'); prev.classList.add('done'); prev.querySelector('.step-icon').innerHTML = '✓'; }
             }
-        });
-    </script>
+            // 开启新状态
+            currentStep++;
+            if(currentStep <= steps.length) {
+                const curr = document.getElementById(`step-${currentStep}`);
+                if(curr) curr.classList.add('active');
+                simInterval = setTimeout(advanceStep, steps[currentStep-1].duration);
+            }
+        };
+        advanceStep();
+    }
+
+    function completeAllSteps() {
+        clearTimeout(simInterval);
+        for(let i=1; i<=5; i++) {
+            const el = document.getElementById(`step-${i}`);
+            el.classList.remove('active'); el.classList.add('done');
+            el.querySelector('.step-icon').innerHTML = '✓';
+        }
+    }
+
+    function resetSteps() {
+        clearTimeout(simInterval);
+        for(let i=1; i<=5; i++) {
+            const el = document.getElementById(`step-${i}`);
+            el.classList.remove('active', 'done');
+            el.querySelector('.step-icon').innerHTML = i;
+        }
+    }
+
+    // 4. 表单提交与核心逻辑
+    document.getElementById('article-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('sub-btn');
+        const previewBox = document.getElementById('preview-box');
+        
+        // 界面初始化
+        btn.disabled = true; btn.textContent = "⚙️ 工作流全速运行中...";
+        previewBox.innerHTML = '<div class="placeholder-text">🚀 正在等待 n8n 引擎合成文章...</div>';
+        resetSteps();
+        
+        // 启动视觉进度条
+        startProgressSimulation();
+        
+        try {
+            // 【⚠️ 记得填入你的 N8N Webhook 地址】
+            const response = await fetch("http://你的N8N地址/webhook/article-gen-webhook", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    topic: document.getElementById('topic').value,
+                    keywords: document.getElementById('keywords').value,
+                    product_name: document.getElementById('p_name').value,
+                    product_link: document.getElementById('p_link').value,
+                    images: base64Files
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                completeAllSteps(); // 接口返回成功，瞬间强制把所有步骤点亮为完成
+                
+                // 提取 n8n 传回来的最终 HTML 代码，并清洗换行符，渲染在右侧
+                let finalHtml = data.final_article_html || data[0]?.final_article_html || "获取结果失败";
+                finalHtml = finalHtml.replace(/\\n/g, '').replace(/\n/g, ''); 
+                previewBox.innerHTML = finalHtml;
+
+            } else {
+                throw new Error("HTTP " + response.status);
+            }
+        } catch (error) {
+            clearTimeout(simInterval);
+            previewBox.innerHTML = `<div class="placeholder-text" style="color:#ef4444;">❌ 请求失败: ${error.message} <br>请检查 n8n 状态或 Webhook 地址是否正确。</div>`;
+        } finally {
+            btn.disabled = false; btn.textContent = "🚀 开始自动化生成";
+        }
+    };
+</script>
+
 </body>
 </html>
