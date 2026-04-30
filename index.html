@@ -6,7 +6,6 @@
     <title>AI 自动化文章生成器</title>
     <style>
         :root {
-            /* 白天模式变量 */
             --bg-color: #f3f4f6;
             --container-bg: #ffffff;
             --text-color: #1f2937;
@@ -19,7 +18,6 @@
         }
 
         [data-theme="dark"] {
-            /* 黑夜模式变量 */
             --bg-color: #111827;
             --container-bg: #1f2937;
             --text-color: #f9fafb;
@@ -54,8 +52,7 @@
             border-radius: 12px;
             box-shadow: var(--shadow);
             width: 100%;
-            max-width: 600px;
-            position: relative;
+            max-width: 650px;
         }
 
         .header {
@@ -70,7 +67,6 @@
             font-size: 1.5rem;
         }
 
-        /* 主题切换按钮 */
         .theme-toggle {
             background: none;
             border: none;
@@ -79,8 +75,19 @@
             color: var(--text-color);
         }
 
-        .form-group {
+        .form-row {
+            display: flex;
+            gap: 15px;
             margin-bottom: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+            margin-bottom: 20px;
+        }
+
+        .form-row .form-group {
+            margin-bottom: 0;
         }
 
         label {
@@ -89,7 +96,7 @@
             font-weight: 500;
         }
 
-        input[type="text"] {
+        input[type="text"], input[type="url"] {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid var(--border-color);
@@ -99,7 +106,7 @@
             font-size: 1rem;
         }
 
-        input[type="text"]:focus {
+        input[type="text"]:focus, input[type="url"]:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
@@ -111,7 +118,6 @@
             color: var(--text-color);
         }
 
-        /* 图片预览区 */
         .preview-container {
             display: flex;
             flex-wrap: wrap;
@@ -153,6 +159,7 @@
             margin-top: 15px;
             text-align: center;
             font-size: 0.9rem;
+            min-height: 20px;
         }
 
         .success { color: #10b981; }
@@ -164,68 +171,72 @@
 
     <div class="container">
         <div class="header">
-            <h1>内容生成器</h1>
+            <h1>博客自动生成与发布</h1>
             <button class="theme-toggle" id="theme-btn" title="切换白天/黑夜模式">🌙</button>
         </div>
 
         <form id="article-form">
             <div class="form-group">
-                <label for="topic">文章主题 *</label>
-                <input type="text" id="topic" placeholder="例如：人工智能在医疗领域的应用" required>
+                <label for="topic">文章主题 (Topic) *</label>
+                <input type="text" id="topic" placeholder="例如：如何在户外运动中保护膝盖" required>
             </div>
 
             <div class="form-group">
-                <label for="keywords">关键词 *</label>
-                <input type="text" id="keywords" placeholder="例如：AI, 医疗, 诊断, 未来趋势" required>
+                <label for="keywords">核心关键词 (Keywords) *</label>
+                <input type="text" id="keywords" placeholder="例如：户外运动, 护膝, 登山装备" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="product_name">产品名称/锚文本 *</label>
+                    <input type="text" id="product_name" placeholder="例如：高级透气运动护膝" required>
+                </div>
+                <div class="form-group">
+                    <label for="product_link">产品链接 (URL) *</label>
+                    <input type="url" id="product_link" placeholder="https://yoursite.com/product/..." required>
+                </div>
             </div>
 
             <div class="form-group">
                 <label for="images">参考图片 (最多 5 张)</label>
                 <input type="file" id="images" accept="image/png, image/jpeg, image/jpg, image/webp" multiple>
                 <div class="preview-container" id="preview-container"></div>
-                <small style="color: var(--text-muted);">仅作为生成灵感参考，支持 JPG, PNG格式</small>
+                <small style="color: var(--text-muted);">辅助大模型理解，支持 JPG, PNG格式</small>
             </div>
 
-            <button type="submit" class="submit-btn" id="submit-btn">开始生成并发布</button>
+            <button type="submit" class="submit-btn" id="submit-btn">开始生成图文</button>
         </form>
 
         <div id="status-msg"></div>
     </div>
 
     <script>
-        // 1. 白天/黑夜模式切换逻辑
+        // 白天/黑夜模式切换
         const themeBtn = document.getElementById('theme-btn');
         let isDarkMode = false;
-
         themeBtn.addEventListener('click', () => {
             isDarkMode = !isDarkMode;
-            if (isDarkMode) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                themeBtn.textContent = '☀️';
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-                themeBtn.textContent = '🌙';
-            }
+            document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : '');
+            themeBtn.textContent = isDarkMode ? '☀️' : '🌙';
         });
 
-        // 2. 图片选择与预览逻辑 (限制最多5张)
+        // 图片选择与预览逻辑
         const imageInput = document.getElementById('images');
         const previewContainer = document.getElementById('preview-container');
         let selectedFiles = [];
 
         imageInput.addEventListener('change', (e) => {
             const files = Array.from(e.target.files);
-            
             if (files.length > 5) {
-                alert("最多只能上传 5 张图片！请重新选择。");
-                imageInput.value = ""; // 清空选择
+                alert("最多只能上传 5 张图片！");
+                imageInput.value = ""; 
                 previewContainer.innerHTML = "";
                 selectedFiles = [];
                 return;
             }
 
             selectedFiles = files;
-            previewContainer.innerHTML = ""; // 清空旧预览
+            previewContainer.innerHTML = ""; 
 
             files.forEach(file => {
                 const reader = new FileReader();
@@ -239,7 +250,6 @@
             });
         });
 
-        // 3. 将文件转换为 Base64，方便发送给 n8n
         const fileToBase64 = (file) => new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -247,7 +257,7 @@
             reader.onerror = error => reject(error);
         });
 
-        // 4. 表单提交与 n8n Webhook 交互
+        // 表单提交
         const form = document.getElementById('article-form');
         const submitBtn = document.getElementById('submit-btn');
         const statusMsg = document.getElementById('status-msg');
@@ -258,42 +268,30 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const topic = document.getElementById('topic').value.trim();
-            const keywords = document.getElementById('keywords').value.trim();
-
-            if (!topic || !keywords) {
-                alert("请输入主题和关键词");
-                return;
-            }
-
-            // 按钮状态：加载中
             submitBtn.disabled = true;
-            submitBtn.textContent = "生成中，请耐心等待...";
-            statusMsg.textContent = "正在上传数据至工作流...";
+            submitBtn.textContent = "数据处理中，请稍候...";
+            statusMsg.textContent = "正在上传数据至 n8n 工作流...";
             statusMsg.className = "loading";
 
             try {
-                // 转换所有图片为 Base64
                 const base64Images = await Promise.all(selectedFiles.map(file => fileToBase64(file)));
 
-                // 构建请求 Payload
                 const payload = {
-                    topic: topic,
-                    keywords: keywords,
+                    topic: document.getElementById('topic').value.trim(),
+                    keywords: document.getElementById('keywords').value.trim(),
+                    product_name: document.getElementById('product_name').value.trim(),
+                    product_link: document.getElementById('product_link').value.trim(),
                     reference_images: base64Images 
                 };
 
-                // 发起请求到 n8n
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
-                    statusMsg.textContent = "✅ 工作流已成功触发！文章正在生成并发布中。";
+                    statusMsg.textContent = "✅ 工作流已成功触发！文章正在自动生成中。";
                     statusMsg.className = "success";
                     form.reset();
                     previewContainer.innerHTML = "";
@@ -306,9 +304,8 @@
                 statusMsg.textContent = "❌ 请求失败，请检查网络或 Webhook 地址配置。";
                 statusMsg.className = "error";
             } finally {
-                // 恢复按钮状态
                 submitBtn.disabled = false;
-                submitBtn.textContent = "开始生成并发布";
+                submitBtn.textContent = "开始生成图文";
             }
         });
     </script>
