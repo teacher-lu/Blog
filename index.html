@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI SEO 自动化内容工作台 (DeepSeek 驱动)</title>
+    <title>AI SEO 自动化内容工作台</title>
     <style>
         :root {
             --bg-color: #f3f4f6; --panel-bg: #ffffff; --text-main: #1f2937; --text-muted: #6b7280;
@@ -105,7 +105,7 @@
         <div class="panel-header">👁️ 最终效果预览</div>
         <div class="panel-content" style="background-color: #f8fafc; padding: 15px;">
             <div id="preview-box">
-                <div class="placeholder-text">填写左侧信息并点击生成<br><span style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">DeepSeek 模型深度思考约需 30-60 秒，请耐心等待</span></div>
+                <div class="placeholder-text">填写左侧信息并点击生成<br><span style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">AI模型深度思考约需 60-120 秒，请耐心等待</span></div>
             </div>
         </div>
     </div>
@@ -140,14 +140,14 @@
         }));
     };
 
-    // 3. 进度条动画控制 (专为 DeepSeek 优化了等待时长)
+    // 3. 进度条动画控制
     let simInterval;
     function startProgressSimulation() {
         const steps = [
             { id: 1, duration: 3000 },   // 接收极快
-            { id: 2, duration: 35000 },  // DeepSeek 深度思考耗时较长 (设为35秒)
+            { id: 2, duration: 35000 },  // AI深度思考耗时较长 (设为35秒)
             { id: 3, duration: 5000 },   // 提取极快
-            { id: 4, duration: 40000 },  // 云雾 AI 绘图约 15 秒
+            { id: 4, duration: 40000 },  // AI 绘图约 40 秒
             { id: 5, duration: 5000 }    // 合并极快
         ];
         let currentStep = 0;
