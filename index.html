@@ -74,13 +74,13 @@
             const [currentStep, setCurrentStep] = useState(-1);
             const [generatedHtml, setGeneratedHtml] = useState('');
 
-            // 模拟的工作流步骤定义
+            // 工作流步骤定义
             const steps = [
-                { id: 0, title: '接收请求', desc: '准备数据并触发 n8n Webhook' },
-                { id: 1, title: 'Gemini 生成内容', desc: '根据主题与关键词生成文章及插图提示词' },
-                { id: 2, title: 'ChatGPT DALL-E 绘图', desc: '根据提取的提示词生成文章插图' },
-                { id: 3, title: '组装 HTML', desc: '整合文本与图片链接进行精美排版' },
-                { id: 4, title: '发布到 WordPress', desc: '上传素材至媒体库并发布文章' }
+                { id: 0, title: '接收请求', desc: '准备数据并发送至 n8n Webhook' },
+                { id: 1, title: 'AI 分析主题', desc: '根据主题与关键词构思内容框架' },
+                { id: 2, title: '内容及提示词生成', desc: 'Gemini 撰写正文并提取绘图提示词' },
+                { id: 3, title: 'AI 绘图处理', desc: '请求图像大模型生成文章配图' },
+                { id: 4, title: '获取响应结果', desc: '解析返回数据并在界面渲染展示' }
             ];
 
             // 监听系统主题
@@ -119,65 +119,8 @@
                 setImages(images.filter((_, index) => index !== indexToRemove));
             };
 
-            // 模拟工作流执行
-            const simulateWorkflow = async () => {
-                setWorkflowState('running');
-                setCurrentStep(0);
-                setGeneratedHtml('');
-
-                const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-                // 步骤 0: 触发 Webhook
-                await delay(1000); 
-                setCurrentStep(1);
-
-                // 步骤 1: Gemini 生成
-                await delay(2500);
-                setCurrentStep(2);
-
-                // 步骤 2: DALL-E 绘图
-                await delay(3000);
-                setCurrentStep(3);
-
-                // 步骤 3: 组装 HTML
-                await delay(1500);
-                setCurrentStep(4);
-
-                // 步骤 4: 发布到 WP
-                await delay(2000);
-                
-                // 完成
-                setCurrentStep(5); // 5 表示全部完成
-                setWorkflowState('completed');
-                
-                // 生成模拟结果
-                setGeneratedHtml(`
-                    <div style="font-family: sans-serif; line-height: 1.6; color: ${isDarkMode ? '#e5e7eb' : '#374151'};">
-                        <h1 style="font-size: 1.875rem; font-weight: bold; margin-bottom: 1rem; color: ${isDarkMode ? '#f3f4f6' : '#111827'};">关于"${topic}"的深度解析</h1>
-                        <p style="margin-bottom: 1rem;">在当今飞速发展的数字时代，<strong>${keywords || '相关领域'}</strong> 的重要性日益凸显。本文将带您深入探讨这一主题，结合最新趋势与实践经验，为您提供全面的见解。</p>
-                        
-                        <div style="margin: 2rem 0; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                                <div style="width: 100%; height: 250px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                                    [AI 生成插图: 充满科技感与创意的概念图]
-                                </div>
-                                <p style="text-align: center; font-size: 0.875rem; color: gray; margin-top: 0.5rem; padding-bottom: 0.5rem;">图1: ${topic} 的概念意境图 (DALL-E 3 生成)</p>
-                        </div>
-
-                        <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.75rem; color: ${isDarkMode ? '#f3f4f6' : '#111827'};">核心观点与应用场景</h2>
-                        <p style="margin-bottom: 1rem;">基于我们提交的参考资料与算法深度分析，目前行业内主要呈现以下几个显著特征：</p>
-                        <ul style="list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.5rem;">
-                                <li>自动化流程极大地提高了内容产出的效率。</li>
-                                <li>AI 的介入使得个性化和定制化成为了可能。</li>
-                                <li>系统集成（如 n8n 与 WordPress 的结合）打通了数据孤岛。</li>
-                        </ul>
-                        
-                        <p style="margin-bottom: 1rem;">总结来说，掌握这一套自动化工作流，将为创作者节省超过 80% 的机械性劳动时间，让您能更专注于核心创意的构思与战略布局。</p>
-                    </div>
-                `);
-            };
-
-            // 提交表单
-            const handleSubmit = () => {
+            // 提交并执行真实工作流
+            const handleSubmit = async () => {
                 if (!webhookUrl) {
                     setErrorMsg('请输入 n8n Webhook 链接！');
                     return;
@@ -186,29 +129,88 @@
                     setErrorMsg('请输入文章主题！');
                     return;
                 }
-                
-                // 【对接指南】 在真实应用中，请取消以下注释并删除 simulateWorkflow()
-                /*
-                const formData = new FormData();
-                formData.append('topic', topic);
-                formData.append('keywords', keywords);
-                images.forEach((img, index) => {
-                    formData.append(`image_${index}`, img.file);
-                });
 
-                fetch(webhookUrl, {
-                    method: 'POST',
-                    body: formData
-                }).then(res => res.json())
-                  .then(data => {
-                     // 可以在这里处理 n8n 返回的数据
-                  }).catch(err => {
-                     setErrorMsg('网络请求失败');
-                  });
-                */
+                // 初始化状态
+                setWorkflowState('running');
+                setCurrentStep(0);
+                setGeneratedHtml('');
+                setErrorMsg('');
 
-                // 当前运行模拟演示
-                simulateWorkflow();
+                // 启动前端虚拟进度条 (每4秒自动跳一步，直到第4步，防止死等枯燥)
+                let currentSimulatedStep = 0;
+                const stepInterval = setInterval(() => {
+                    if (currentSimulatedStep < 4) {
+                        currentSimulatedStep++;
+                        setCurrentStep(currentSimulatedStep);
+                    }
+                }, 4000); 
+
+                try {
+                    // 1. 构建发送到 n8n 的表单数据
+                    const formData = new FormData();
+                    formData.append('topic', topic);
+                    formData.append('keywords', keywords);
+                    images.forEach((img, index) => {
+                        formData.append(`image_${index}`, img.file);
+                    });
+
+                    // 2. 发起真实 HTTP 请求对接 n8n
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // 请求完成，清除虚拟进度条定时器
+                    clearInterval(stepInterval);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP 错误! 状态码: ${response.status}`);
+                    }
+
+                    // 3. 获取 n8n 返回的数据
+                    const data = await response.json();
+                    
+                    // 步骤拉满，表示完成
+                    setCurrentStep(5);
+                    setWorkflowState('completed');
+
+                    // 4. 解析并渲染 n8n 返回的数据
+                    let htmlContent = "";
+                    // 兼容 n8n 可能返回数组或对象的情况
+                    const responseData = Array.isArray(data) ? data[0] : data;
+
+                    if (responseData && responseData.message === "Workflow was started") {
+                        // 场景 A: n8n 采用默认配置，立刻返回了启动成功信息
+                        htmlContent = `<div style="text-align: center; padding: 3rem 1rem;">
+                            <h3 style="color: #10b981; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">✅ 请求已成功发送</h3>
+                            <p style="margin-bottom: 1.5rem;">工作流已在 n8n 后台启动运行，请前往 n8n 检查执行日志。</p>
+                            <div style="font-size: 0.875rem; background: rgba(59, 130, 246, 0.1); color: #2563eb; padding: 1rem; border-radius: 0.5rem; text-align: left;">
+                                <strong>💡 对接提示：</strong>如果希望在此直接预览结果，请在 n8n 的 Webhook 设置中：<br/>
+                                1. 将 <code>Respond</code> 配置改为 <code>When Last Node Finishes</code> (等待最后一个节点完成)<br/>
+                                2. 确保工作流的最后一个节点会输出最终的 HTML 代码。
+                            </div>
+                        </div>`;
+                    } else if (responseData && responseData.article_html) {
+                        // 场景 B: n8n 等待运行结束，并返回了包含 article_html 的数据
+                        htmlContent = `<div style="font-family: sans-serif; line-height: 1.6;">
+                            ${responseData.article_html}
+                        </div>`;
+                    } else {
+                        // 场景 C: 兜底显示 n8n 返回的任何 JSON 数据
+                        htmlContent = `<div style="padding: 1rem;">
+                            <h3 style="font-weight: bold; margin-bottom: 1rem;">执行完成，返回数据：</h3>
+                            <pre style="background: rgba(0,0,0,0.05); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.875rem; white-space: pre-wrap; word-break: break-all;">${JSON.stringify(responseData, null, 2)}</pre>
+                        </div>`;
+                    }
+
+                    setGeneratedHtml(htmlContent);
+
+                } catch (err) {
+                    clearInterval(stepInterval);
+                    setWorkflowState('error');
+                    setCurrentStep(-1);
+                    setErrorMsg(`连接失败: ${err.message} (检查是否在 n8n Webhook 中开启了跨域 CORS)`);
+                }
             };
 
             return (
@@ -349,7 +351,7 @@
                                             {workflowState === 'running' ? (
                                                 <>
                                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                                    <span>正在生成中...</span>
+                                                    <span>正在执行工作流...</span>
                                                 </>
                                             ) : (
                                                 <>
@@ -375,6 +377,11 @@
                                             <div className="h-full flex flex-col items-center justify-center text-gray-400">
                                                 <Settings className="w-16 h-16 opacity-20 mb-4" />
                                                 <p>等待启动任务，工作流将在此展示进度</p>
+                                            </div>
+                                        ) : workflowState === 'error' ? (
+                                            <div className="h-full flex flex-col items-center justify-center text-red-400">
+                                                <AlertCircle className="w-16 h-16 opacity-50 mb-4 text-red-500" />
+                                                <p>工作流执行中断，请检查设置</p>
                                             </div>
                                         ) : (
                                             <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 dark:before:via-gray-700 before:to-transparent">
@@ -414,17 +421,17 @@
                                     <div className="p-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
                                         <h2 className="text-lg font-semibold flex items-center space-x-2">
                                             <ImageIcon className="w-5 h-5 text-purple-500" />
-                                            <span>最终效果预览 (WP)</span>
+                                            <span>最终效果预览</span>
                                         </h2>
                                         {workflowState === 'completed' && (
                                             <span className="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs rounded-full font-medium">
-                                                发布成功
+                                                执行成功
                                             </span>
                                         )}
                                     </div>
                                     
                                     <div className="flex-1 p-6 overflow-y-auto bg-gray-50/30 dark:bg-gray-900/20 custom-scrollbar">
-                                        {workflowState === 'idle' ? (
+                                        {workflowState === 'idle' || workflowState === 'error' ? (
                                             <div className="h-full flex flex-col items-center justify-center text-gray-400">
                                                 <FileText className="w-16 h-16 opacity-20 mb-4" />
                                                 <p>文章生成后将在此处实时预览</p>
@@ -438,12 +445,13 @@
                                                         <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
                                                     </div>
                                                 </div>
-                                                <p className="text-gray-500 dark:text-gray-400 text-sm animate-pulse">正在利用 AI 思考并编排内容...</p>
+                                                <p className="text-gray-500 dark:text-gray-400 text-sm animate-pulse">正在等待工作流返回数据...</p>
                                             </div>
                                         ) : (
                                             <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 min-h-full">
                                                 <div 
                                                     dangerouslySetInnerHTML={{ __html: generatedHtml }}
+                                                    className="prose dark:prose-invert max-w-none break-words"
                                                 />
                                             </div>
                                         )}
