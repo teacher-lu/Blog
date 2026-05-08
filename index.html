@@ -31,7 +31,7 @@
         .submit-btn { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
         
-        .preview-grid { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .preview-grid { display: flex; gap: 12px; margin-top: 15px; flex-wrap: wrap; }
         .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); }
 
         /* Timeline 进度条样式 */
@@ -66,7 +66,6 @@
 <body>
 
 <div class="dashboard">
-    <!-- 左侧：输入控制台 -->
     <div class="panel">
         <div class="panel-header">
             <span>✍️ 创作配置面板</span>
@@ -88,7 +87,6 @@
         </div>
     </div>
 
-    <!-- 中间：工作流监控 -->
     <div class="panel">
         <div class="panel-header">⚙️ 引擎运行状态</div>
         <div class="panel-content" id="workflow-steps">
@@ -100,7 +98,6 @@
         </div>
     </div>
 
-    <!-- 右侧：最终结果 -->
     <div class="panel">
         <div class="panel-header">👁️ 最终效果预览</div>
         <div class="panel-content" style="background-color: #f8fafc; padding: 15px;">
@@ -120,25 +117,101 @@
         themeBtn.textContent = isDark ? '🌙' : '☀️';
     };
 
-    // 2. 图片预览处理
-    let base64Files = [];
+    // ==========================================
+    // 2. 图片预览处理 (支持追加、大图预览、点击删除)
+    // ==========================================
+    let base64Files = []; // 记忆已上传图片的全局数组
+    const MAX_IMAGES = 5; // 限制最多5张
+
+    // 动态创建“大图预览遮罩层”
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px);';
+    const largeImg = document.createElement('img');
+    largeImg.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);';
+    const closeBtn = document.createElement('span');
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = 'position: absolute; top: 30px; right: 40px; color: #fff; font-size: 50px; cursor: pointer; transition: transform 0.2s;';
+    closeBtn.onmouseover = () => closeBtn.style.transform = 'scale(1.2)';
+    closeBtn.onmouseout = () => closeBtn.style.transform = 'scale(1)';
+    overlay.appendChild(largeImg);
+    overlay.appendChild(closeBtn);
+    document.body.appendChild(overlay);
+
+    // 点击遮罩层或关闭按钮隐藏大图
+    overlay.onclick = closeBtn.onclick = () => {
+        overlay.style.display = 'none';
+    };
+
     document.getElementById('images').onchange = async (e) => {
-        const files = Array.from(e.target.files).slice(0, 5);
+        const newFiles = Array.from(e.target.files);
+        
+        // 校验图片数量是否超过限制
+        if (base64Files.length + newFiles.length > MAX_IMAGES) {
+            alert(`最多只能上传 ${MAX_IMAGES} 张图片！您还可以继续上传 ${MAX_IMAGES - base64Files.length} 张。`);
+            e.target.value = ''; // 清空 input 防止卡死
+            return;
+        }
+
         const previewArea = document.getElementById('preview-area');
-        previewArea.innerHTML = '';
-        base64Files = await Promise.all(files.map(file => {
+
+        const newBase64Promises = newFiles.map(file => {
             return new Promise(resolve => {
                 const reader = new FileReader();
                 reader.onload = (ex) => {
+                    const base64String = ex.target.result;
+                    
+                    // 创建单个图片的外部容器（用来放红叉）
+                    const imgContainer = document.createElement('div');
+                    imgContainer.style.cssText = 'position: relative; display: inline-block;';
+                    
                     const img = document.createElement('img');
-                    img.src = ex.target.result; img.className = 'preview-img';
-                    previewArea.appendChild(img);
-                    resolve(ex.target.result);
+                    img.src = base64String; 
+                    img.className = 'preview-img';
+                    img.style.cursor = 'zoom-in';
+                    img.title = "点击查看大图";
+
+                    // 创建右上角删除红叉按钮
+                    const deleteBtn = document.createElement('span');
+                    deleteBtn.innerHTML = '×';
+                    deleteBtn.style.cssText = 'position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: background 0.2s;';
+                    deleteBtn.title = "删除图片";
+                    deleteBtn.onmouseover = () => deleteBtn.style.background = '#dc2626';
+                    deleteBtn.onmouseout = () => deleteBtn.style.background = '#ef4444';
+
+                    // 绑定：点击图片放大预览
+                    img.onclick = () => {
+                        largeImg.src = base64String;
+                        overlay.style.display = 'flex';
+                    };
+
+                    // 绑定：点击红叉删除图片
+                    deleteBtn.onclick = (event) => {
+                        event.stopPropagation(); // 阻止触发底部图片的放大事件
+                        const index = base64Files.indexOf(base64String);
+                        if (index > -1) {
+                            base64Files.splice(index, 1); // 从数据源移除
+                        }
+                        imgContainer.remove(); // 从界面移除
+                    };
+
+                    imgContainer.appendChild(img);
+                    imgContainer.appendChild(deleteBtn);
+                    previewArea.appendChild(imgContainer); 
+                    resolve(base64String);
                 };
                 reader.readAsDataURL(file);
             });
-        }));
+        });
+
+        // 将新图片加入全局数组
+        const newlyConverted = await Promise.all(newBase64Promises);
+        base64Files = base64Files.concat(newlyConverted);
+
+        // 重置 input 标签，允许重复上传同一张图片
+        e.target.value = ''; 
     };
+    // ==========================================
+
 
     // 3. 进度条动画控制
     let simInterval;
