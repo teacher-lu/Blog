@@ -28,11 +28,13 @@
         label { display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500; }
         input[type="text"], input[type="url"] { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem; }
         input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
-        .submit-btn { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .submit-btn { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .submit-btn:hover:not(:disabled) { background-color: var(--primary-hover); }
         .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
         
         .preview-grid { display: flex; gap: 12px; margin-top: 15px; flex-wrap: wrap; }
-        .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); }
+        .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); transition: 0.2s; }
+        .preview-img:hover { filter: brightness(0.9); }
 
         /* Timeline 进度条样式 */
         .step { display: flex; margin-bottom: 25px; position: relative; opacity: 0.4; transition: opacity 0.3s; }
@@ -56,7 +58,7 @@
         #preview-box h1 { font-size: 1.8rem; margin-top: 0; color: #111; }
         #preview-box h2 { font-size: 1.4rem; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 1.5em; color: #222; }
         #preview-box h3 { font-size: 1.2rem; color: #333; }
-        #preview-box img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; display: block; }
+        #preview-box img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         #preview-box a { color: var(--primary); text-decoration: none; font-weight: 500; }
         #preview-box a:hover { text-decoration: underline; }
         
@@ -78,8 +80,8 @@
                 <div class="form-group"><label>内链产品名称 *</label><input type="text" id="p_name" placeholder="如: Thesis Hard Cover" required></div>
                 <div class="form-group"><label>内链 URL *</label><input type="url" id="p_link" placeholder="https://..." required></div>
                 <div class="form-group">
-                    <label>参考资料图 (最多5张)</label>
-                    <input type="file" id="images" accept="image/*" multiple style="font-size: 0.8rem;">
+                    <label>参考资料图 (垫图, 最多5张)</label>
+                    <input type="file" id="images" accept="image/*" multiple style="font-size: 0.8rem; padding-bottom: 10px;">
                     <div class="preview-grid" id="preview-area"></div>
                 </div>
                 <button type="submit" class="submit-btn" id="sub-btn">🚀 深度思考并生成</button>
@@ -100,7 +102,7 @@
 
     <div class="panel">
         <div class="panel-header">👁️ 最终效果预览</div>
-        <div class="panel-content" style="background-color: #f8fafc; padding: 15px;">
+        <div class="panel-content" style="background-color: #f8fafc; padding: 15px; position: relative;">
             <div id="preview-box">
                 <div class="placeholder-text">填写左侧信息并点击生成<br><span style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">AI模型深度思考约需 60-120 秒，请耐心等待</span></div>
             </div>
@@ -120,10 +122,10 @@
     // ==========================================
     // 2. 图片预览处理 (支持追加、大图预览、点击删除)
     // ==========================================
-    let base64Files = []; // 记忆已上传图片的全局数组
-    const MAX_IMAGES = 5; // 限制最多5张
+    let base64Files = []; 
+    const MAX_IMAGES = 5; 
 
-    // 动态创建“大图预览遮罩层”
+    // 创建大图预览遮罩层
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px);';
     const largeImg = document.createElement('img');
@@ -137,18 +139,14 @@
     overlay.appendChild(closeBtn);
     document.body.appendChild(overlay);
 
-    // 点击遮罩层或关闭按钮隐藏大图
-    overlay.onclick = closeBtn.onclick = () => {
-        overlay.style.display = 'none';
-    };
+    overlay.onclick = closeBtn.onclick = () => overlay.style.display = 'none';
 
     document.getElementById('images').onchange = async (e) => {
         const newFiles = Array.from(e.target.files);
         
-        // 校验图片数量是否超过限制
         if (base64Files.length + newFiles.length > MAX_IMAGES) {
             alert(`最多只能上传 ${MAX_IMAGES} 张图片！您还可以继续上传 ${MAX_IMAGES - base64Files.length} 张。`);
-            e.target.value = ''; // 清空 input 防止卡死
+            e.target.value = ''; 
             return;
         }
 
@@ -160,7 +158,6 @@
                 reader.onload = (ex) => {
                     const base64String = ex.target.result;
                     
-                    // 创建单个图片的外部容器（用来放红叉）
                     const imgContainer = document.createElement('div');
                     imgContainer.style.cssText = 'position: relative; display: inline-block;';
                     
@@ -170,7 +167,6 @@
                     img.style.cursor = 'zoom-in';
                     img.title = "点击查看大图";
 
-                    // 创建右上角删除红叉按钮
                     const deleteBtn = document.createElement('span');
                     deleteBtn.innerHTML = '×';
                     deleteBtn.style.cssText = 'position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: background 0.2s;';
@@ -178,20 +174,18 @@
                     deleteBtn.onmouseover = () => deleteBtn.style.background = '#dc2626';
                     deleteBtn.onmouseout = () => deleteBtn.style.background = '#ef4444';
 
-                    // 绑定：点击图片放大预览
                     img.onclick = () => {
                         largeImg.src = base64String;
                         overlay.style.display = 'flex';
                     };
 
-                    // 绑定：点击红叉删除图片
                     deleteBtn.onclick = (event) => {
-                        event.stopPropagation(); // 阻止触发底部图片的放大事件
+                        event.stopPropagation(); 
                         const index = base64Files.indexOf(base64String);
                         if (index > -1) {
-                            base64Files.splice(index, 1); // 从数据源移除
+                            base64Files.splice(index, 1); 
                         }
-                        imgContainer.remove(); // 从界面移除
+                        imgContainer.remove(); 
                     };
 
                     imgContainer.appendChild(img);
@@ -203,25 +197,22 @@
             });
         });
 
-        // 将新图片加入全局数组
         const newlyConverted = await Promise.all(newBase64Promises);
         base64Files = base64Files.concat(newlyConverted);
-
-        // 重置 input 标签，允许重复上传同一张图片
         e.target.value = ''; 
     };
+
     // ==========================================
-
-
     // 3. 进度条动画控制
+    // ==========================================
     let simInterval;
     function startProgressSimulation() {
         const steps = [
-            { id: 1, duration: 3000 },   // 接收极快
-            { id: 2, duration: 35000 },  // AI深度思考耗时较长 (设为35秒)
-            { id: 3, duration: 5000 },   // 提取极快
-            { id: 4, duration: 40000 },  // AI 绘图约 40 秒
-            { id: 5, duration: 5000 }    // 合并极快
+            { id: 1, duration: 3000 },
+            { id: 2, duration: 35000 },
+            { id: 3, duration: 5000 },
+            { id: 4, duration: 40000 },
+            { id: 5, duration: 5000 }
         ];
         let currentStep = 0;
         const advanceStep = () => {
@@ -257,7 +248,95 @@
         }
     }
 
-    // 4. 表单提交核心逻辑
+    // ==========================================
+    // 4. 局部重绘功能 (注入重绘按钮与调用迷你工作流)
+    // ==========================================
+    function bindRegenButtons() {
+        const previewBox = document.getElementById('preview-box');
+        
+        // 自动防呆机制：如果返回的 img 没有被 div 包裹，自动套上 Wrapper
+        const rawImages = previewBox.querySelectorAll('img');
+        rawImages.forEach((img, idx) => {
+            if (!img.parentElement.classList.contains('ai-image-wrapper')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'ai-image-wrapper';
+                wrapper.style.cssText = 'position: relative; display: inline-block; width: 100%;';
+                // 挪动节点
+                img.parentNode.insertBefore(wrapper, img);
+                wrapper.appendChild(img);
+                
+                // 赋予默认的 prompt 以防为空
+                if (!img.hasAttribute('data-prompt')) {
+                    img.setAttribute('data-prompt', `AI Generated Image ${idx + 1}`);
+                }
+            }
+        });
+
+        // 给每个 Wrapper 绑定悬浮按钮
+        const wrappers = previewBox.querySelectorAll('.ai-image-wrapper');
+        wrappers.forEach(wrapper => {
+            if (wrapper.querySelector('.regen-btn')) return; // 避免重复添加
+
+            const img = wrapper.querySelector('img');
+            
+            const regenBtn = document.createElement('button');
+            regenBtn.className = 'regen-btn';
+            regenBtn.innerHTML = '🔄 重新生成此图';
+            regenBtn.style.cssText = 'position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.75); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 10; font-weight: bold; backdrop-filter: blur(4px); box-shadow: 0 4px 6px rgba(0,0,0,0.3);';
+
+            wrapper.onmouseenter = () => regenBtn.style.opacity = '1';
+            wrapper.onmouseleave = () => regenBtn.style.opacity = '0';
+
+            regenBtn.onclick = async () => {
+                const originalPrompt = img.getAttribute('data-prompt') || '';
+                const newPrompt = prompt("确认或修改重绘提示词：", originalPrompt);
+                if (!newPrompt) return; 
+
+                regenBtn.innerHTML = '⏳ 正在拼命重绘...';
+                regenBtn.disabled = true;
+                img.style.opacity = '0.4';
+                img.style.filter = 'blur(2px)';
+                img.style.transition = '0.3s';
+
+                try {
+                    // 【迷你重绘工作流的 Webhook URL】
+                    const REGEN_URL = "https://api.wallyai.top/webhook/regen-single-image";
+                    
+                    const res = await fetch(REGEN_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            prompt: newPrompt,
+                            reference_images: base64Files // 自动带上左侧面板已上传的垫图
+                        })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        // 兼容不同层级的 JSON 返回格式
+                        const newUrl = (Array.isArray(data) ? data[0] : data).data[0].url;
+                        img.src = newUrl;
+                        img.setAttribute('data-prompt', newPrompt);
+                    } else {
+                        alert("重绘失败，服务器状态码：" + res.status);
+                    }
+                } catch (err) {
+                    alert("网络错误：" + err.message);
+                } finally {
+                    regenBtn.innerHTML = '🔄 重新生成此图';
+                    regenBtn.disabled = false;
+                    img.style.opacity = '1';
+                    img.style.filter = 'none';
+                }
+            };
+
+            wrapper.appendChild(regenBtn);
+        });
+    }
+
+    // ==========================================
+    // 5. 主表单提交核心逻辑
+    // ==========================================
     document.getElementById('article-form').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('sub-btn');
@@ -269,10 +348,10 @@
         startProgressSimulation();
         
         try {
-            // 【⚠️ 替换为你的正式/测试 Webhook 地址】
-            const N8N_WEBHOOK_URL = "https://api.wallyai.top/webhook/article-gen";
+            // 【主工作流的 Webhook URL】
+            const MAIN_WEBHOOK_URL = "https://api.wallyai.top/webhook/article-gen";
 
-            const response = await fetch(N8N_WEBHOOK_URL, {
+            const response = await fetch(MAIN_WEBHOOK_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -284,15 +363,11 @@
                 })
             });
 
-            console.log("11111", response); 
-
             if (response.ok) {
                 const data = await response.json();
-                console.log("n8n 返回的原始数据:", data); 
                 completeAllSteps(); 
                 
                 let finalHtml = "";
-                // 适配 Respond to Webhook 可能返回的数组或对象格式
                 if (Array.isArray(data) && data.length > 0) {
                     finalHtml = data[0].final_article_html || "";
                 } else if (data && typeof data === 'object') {
@@ -303,31 +378,30 @@
                      finalHtml = "<p>数据获取成功，但未能在 JSON 中找到 final_article_html 字段。</p>";
                 }
 
-                // 终极清洗：消除可能遗留的转义符
                 finalHtml = finalHtml.replace(/\\n/g, '').replace(/\n/g, ''); 
                 previewBox.innerHTML = finalHtml;
+                
+                // 【核心：渲染文章后立即绑定重绘按钮】
+                setTimeout(() => bindRegenButtons(), 100); 
 
             } else {
                 throw new Error(`HTTP 状态码: ${response.status}`);
             }
         } catch (error) {
             clearTimeout(simInterval);
-            console.error("请求被中断:", error);
-            
             let errorMsg = error.message;
             if (error.message.includes('Failed to fetch')) {
-                errorMsg = `网络请求超时被切断`
+                errorMsg = `网络请求超时或连接被强制切断。<br><br>建议：请检查代理服务器配置，或稍后重试。`
             }
             previewBox.innerHTML = `<div class="placeholder-text" style="color:#ef4444; text-align:left; font-size: 1rem; width: 80%;">
                 <b>❌ 生成失败:</b><br><br>${errorMsg}
             </div>`;
             
-            // 失败时进度条停滞显红
             document.querySelectorAll('.step.active .step-icon').forEach(el => {
                 el.style.backgroundColor = '#ef4444'; el.style.animation = 'none';
             });
         } finally {
-            btn.disabled = false; btn.textContent = "🚀 深度思考并生成文章";
+            btn.disabled = false; btn.textContent = "🚀 深度思考并生成";
         }
     };
 </script>
