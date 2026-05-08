@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI SEO 自动化内容工作台</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --bg-color: #f3f4f6; --panel-bg: #ffffff; --text-main: #1f2937; --text-muted: #6b7280;
@@ -101,7 +102,10 @@
     </div>
 
     <div class="panel">
-        <div class="panel-header">👁️ 最终效果预览</div>
+        <div class="panel-header">
+            <span>👁️ 最终效果预览</span>
+            <button id="download-pdf" style="padding: 4px 8px; font-size: 12px; cursor: pointer; display: none;">📥 下载 PDF</button>
+        </div>
         <div class="panel-content" style="background-color: #f8fafc; padding: 15px; position: relative;">
             <div id="preview-box">
                 <div class="placeholder-text">填写左侧信息并点击生成<br><span style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">AI模型深度思考约需 60-120 秒，请耐心等待</span></div>
@@ -404,6 +408,29 @@
             btn.disabled = false; btn.textContent = "🚀 深度思考并生成";
         }
     };
+    // ==========================================
+    // 6. PDF文件下载
+    // ==========================================
+    document.getElementById('download-pdf').onclick = function () {
+    const element = document.getElementById('preview-box');
+    const topic = document.getElementById('topic').value || 'AI-SEO-Article';
+    
+    const opt = {
+        margin:       10,
+        filename:     `${topic}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true }, // useCORS 很关键，否则无法加载云雾的图片
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // 运行下载
+    html2pdf().set(opt).from(element).save();
+};
+
+// 在你的 completeAllSteps() 或者渲染完 HTML 后，让下载按钮显示出来
+function showDownloadButton() {
+    document.getElementById('download-pdf').style.display = 'block';
+}
 </script>
 
 </body>
