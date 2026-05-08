@@ -282,10 +282,10 @@
             const regenBtn = document.createElement('button');
             regenBtn.className = 'regen-btn';
             regenBtn.innerHTML = '🔄 重新生成此图';
-            regenBtn.style.cssText = 'position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.75); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 10; font-weight: bold; backdrop-filter: blur(4px); box-shadow: 0 4px 6px rgba(0,0,0,0.3);';
+            regenBtn.style.cssText = 'position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.75); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 13px; opacity: 0.85; transition: opacity 0.3s; z-index: 10; font-weight: bold; backdrop-filter: blur(4px); box-shadow: 0 4px 6px rgba(0,0,0,0.3);';
 
             wrapper.onmouseenter = () => regenBtn.style.opacity = '1';
-            wrapper.onmouseleave = () => regenBtn.style.opacity = '0';
+            wrapper.onmouseleave = () => regenBtn.style.opacity = '0.85';
 
             regenBtn.onclick = async () => {
                 const originalPrompt = img.getAttribute('data-prompt') || '';
