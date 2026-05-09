@@ -471,7 +471,7 @@
             const cleanHtmlToPublish = tempDiv.innerHTML;
 
             // 【新的发布专用 Webhook URL，请在 n8n 建立对应的工作流】
-            const PUBLISH_WEBHOOK_URL = "";
+            const PUBLISH_WEBHOOK_URL = "https://api.wallyai.top/webhook/publish-to-wp";
 
             const res = await fetch(PUBLISH_WEBHOOK_URL, {
                 method: 'POST',
