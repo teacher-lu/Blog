@@ -17,7 +17,7 @@
         * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s; }
         body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; height: 100vh; overflow: hidden; }
         
-        .dashboard { display: grid; grid-template-columns: 350px 300px 1fr; gap: 20px; height: 100%; max-width: 1600px; margin: 0 auto; }
+        .dashboard { display: grid; grid-template-columns: 350px 300px 1fr; gap: 20px; height: 100%; max-width: 1800px; margin: 0 auto; }
         .panel { background-color: var(--panel-bg); border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
         .panel-content { padding: 20px; overflow-y: auto; flex: 1; }
@@ -106,6 +106,42 @@
             <div id="preview-box">
                 <div class="placeholder-text">填写左侧信息并点击生成<br><span style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">AI模型深度思考约需 60-120 秒，请耐心等待</span></div>
             </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">🚀 分发与发布</div>
+        <div class="panel-content" style="display: flex; flex-direction: column;">
+            
+            <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; border: 1px solid var(--border-color);">
+                💡 <b>发布提示：</b><br>请先在左侧生成文章，并在“效果预览区”确认内容及图片无误（或完成局部重绘）后，再执行分发。
+            </div>
+
+            <div class="form-group">
+                <label>🎯 选择目标站点</label>
+                <select id="wp-target" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem;">
+                    <option value="zealviz">Zealviz </option>
+                    <option value="palficab">Palficab</option>
+                    <option value="homeoun">Homeoun</option>
+                    <option value="hsuglobal">Hsuglobal</option>
+                    <!-- <option value="hsushop">HsuShop</option> -->
+                    <option value="bagorganizersshop">Bagorganizersshop</option>
+                    
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>📝 默认发布状态</label>
+                <select id="wp-status" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem;">
+                    <option value="draft">存为草稿</option>
+                    <option value="publish">直接发布</option>
+                </select>
+            </div>
+
+            <!-- 将按钮推到面板最底部 -->
+            <button type="button" class="submit-btn" id="publish-btn" style="background-color: var(--success); margin-top: auto; padding: 15px; font-size: 1.05rem;">
+                ✅ 一键同步至网站
+            </button>
         </div>
     </div>
 </div>
@@ -402,6 +438,61 @@
             });
         } finally {
             btn.disabled = false; btn.textContent = "🚀 深度思考并生成";
+        }
+    };
+    
+    // ==========================================
+    // 6. 一键发布到 WordPress 逻辑
+    // ==========================================
+    document.getElementById('publish-btn').onclick = async () => {
+        const title = document.getElementById('topic').value;
+        const targetSite = document.getElementById('wp-target').value;
+        const postStatus = document.getElementById('wp-status').value;
+        const previewBox = document.getElementById('preview-box');
+        
+        // 简单防呆验证
+        if (!title || previewBox.innerText.includes('填写左侧信息')) {
+            alert('❌ 无法发布：请先生成文章！');
+            return;
+        }
+
+        const publishBtn = document.getElementById('publish-btn');
+        publishBtn.disabled = true;
+        publishBtn.innerHTML = '⏳ 正在拼命同步中...';
+
+        try {
+            // 【核心防御】：克隆一份当前的 HTML，并删掉里面的“重绘按钮”，防止把管理按钮代码发到网站上
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = previewBox.innerHTML;
+            const regenButtons = tempDiv.querySelectorAll('.regen-btn');
+            regenButtons.forEach(btn => btn.remove());
+            
+            const cleanHtmlToPublish = tempDiv.innerHTML;
+
+            // 【新的发布专用 Webhook URL，请在 n8n 建立对应的工作流】
+            const PUBLISH_WEBHOOK_URL = "";
+
+            const res = await fetch(PUBLISH_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    site_id: targetSite,
+                    post_status: postStatus, // draft 还是 publish
+                    post_title: title,
+                    post_content: cleanHtmlToPublish
+                })
+            });
+
+            if (res.ok) {
+                alert(`🎉 成功！文章已同步至 ${targetSite}。状态：${postStatus === 'draft' ? '草稿' : '已发布上线'}`);
+            } else {
+                alert(`发布失败，服务器状态码: ${res.status}`);
+            }
+        } catch (err) {
+            alert(`网络错误: ${err.message}`);
+        } finally {
+            publishBtn.disabled = false;
+            publishBtn.innerHTML = '✅ 一键同步至网站';
         }
     };
 </script>
