@@ -26,8 +26,8 @@
 
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500; }
-        input[type="text"], input[type="url"] { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem; }
-        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+        input[type="text"], input[type="url"], select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
         .submit-btn { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .submit-btn:hover:not(:disabled) { background-color: var(--primary-hover); }
         .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
@@ -36,7 +36,7 @@
         .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); transition: 0.2s; }
         .preview-img:hover { filter: brightness(0.9); }
 
-        /* Timeline 进度条样式 */
+        /* Timeline */
         .step { display: flex; margin-bottom: 25px; position: relative; opacity: 0.4; transition: opacity 0.3s; }
         .step::after { content: ''; position: absolute; left: 14px; top: 30px; bottom: -25px; width: 2px; background-color: var(--border-color); z-index: 1; }
         .step:last-child::after { display: none; }
@@ -44,7 +44,6 @@
         .step-content { margin-left: 15px; flex: 1; padding-top: 5px; }
         .step-title { font-weight: 600; font-size: 0.95rem; }
         .step-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
-        
         .step.active { opacity: 1; }
         .step.active .step-icon { background-color: var(--processing); color: white; animation: pulse 1.5s infinite; }
         .step.done { opacity: 1; }
@@ -53,7 +52,7 @@
 
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); } }
 
-        /* 右侧文章渲染区 */
+        /* 文章预览区 */
         .preview-wrap { background-color: var(--bg-color); padding: 15px; position: relative; transition: background-color 0.3s ease; }
         #preview-box { background-color: var(--panel-bg); color: var(--text-main); padding: 30px; min-height: 100%; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); line-height: 1.7; font-size: 1.05rem; transition: background-color 0.3s, color 0.3s; }
         #preview-box h1 { font-size: 1.8rem; margin-top: 0; color: var(--text-main); }
@@ -62,11 +61,47 @@
         #preview-box img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         #preview-box a { color: var(--primary); text-decoration: none; font-weight: 500; }
         #preview-box a:hover { text-decoration: underline; }
-        
         .placeholder-text { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: var(--text-muted); text-align: center; font-size: 1.1rem; }
+
+        /* ==================== 现代弹窗系统 UI ==================== */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background-color: var(--panel-bg); color: var(--text-main); padding: 16px 24px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 0.95rem; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s; opacity: 0; border-left: 4px solid transparent; }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: #ef4444; }
+        .toast.info { border-left-color: var(--primary); }
+
+        .dialog-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: opacity 0.3s; }
+        .dialog-box { background: var(--panel-bg); border-radius: 12px; padding: 30px; width: 90%; max-width: 500px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid var(--border-color); }
+        .dialog-box h3 { margin-top: 0; margin-bottom: 10px; color: var(--text-main); font-size: 1.3rem; }
+        .dialog-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+        .dialog-input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem; margin-bottom: 25px; resize: vertical; min-height: 100px; font-family: inherit; line-height: 1.5; }
+        .dialog-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+        .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; }
+        .dialog-btn { padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; font-size: 0.95rem; }
+        .btn-cancel { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+        .btn-cancel:hover { background: var(--bg-color); color: var(--text-main); }
+        .btn-confirm { background: var(--primary); color: white; }
+        .btn-confirm:hover { background: var(--primary-hover); }
     </style>
 </head>
 <body>
+
+<!-- 全局 Toast 容器 -->
+<div id="toast-container"></div>
+
+<!-- 局部重绘精美弹窗 -->
+<div class="dialog-overlay" id="regen-dialog">
+    <div class="dialog-box">
+        <h3>✨ 重新绘制此配图</h3>
+        <p>请在下方修改您的提示词 (Prompt)，AI 将结合您的左侧垫图风格重新生成图像。</p>
+        <textarea id="regen-prompt-input" class="dialog-input" placeholder="输入新的重绘提示词..."></textarea>
+        <div class="dialog-actions">
+            <button class="dialog-btn btn-cancel" id="regen-cancel">取消重绘</button>
+            <button class="dialog-btn btn-confirm" id="regen-confirm">🚀 开始重绘</button>
+        </div>
+    </div>
+</div>
 
 <div class="dashboard">
     <div class="panel">
@@ -102,8 +137,8 @@
     </div>
 
     <div class="panel">
-        <div class="panel-header">👁️ 最终效果预览  </div>
-            <div class="panel-content preview-wrap">
+        <div class="panel-header">👁️ 最终效果预览</div>
+        <div class="panel-content preview-wrap">
             <div id="preview-box">
                 <div class="placeholder-text">填写左侧信息并点击生成<br><span style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">AI模型深度思考约需 60-120 秒，请耐心等待</span></div>
             </div>
@@ -113,33 +148,29 @@
     <div class="panel">
         <div class="panel-header">🚀 分发与发布</div>
         <div class="panel-content" style="display: flex; flex-direction: column;">
-            
             <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; border: 1px solid var(--border-color);">
-                💡 <b>发布提示：</b><br>请先在左侧生成文章，并在“效果预览区”确认内容及图片无误（或完成局部重绘）后，再执行分发。
+                💡 <b>发布提示：</b><br>请先在左侧生成文章，并在“效果预览区”确认内容及图片无误后，再执行分发。
             </div>
 
             <div class="form-group">
                 <label>🎯 选择目标站点</label>
-                <select id="wp-target" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem;">
-                    <option value="zealviz">Zealviz </option>
+                <select id="wp-target">
+                    <option value="zealviz">Zealviz</option>
                     <option value="palficab">Palficab</option>
                     <option value="homeoun">Homeoun</option>
                     <option value="hsuglobal">Hsuglobal</option>
-                    <!-- <option value="hsushop">HsuShop</option> -->
                     <option value="bagorganizersshop">Bagorganizersshop</option>
-                    
                 </select>
             </div>
             
             <div class="form-group">
                 <label>📝 默认发布状态</label>
-                <select id="wp-status" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem;">
+                <select id="wp-status">
                     <option value="draft">存为草稿</option>
-                    <option value="publish">直接发布</option>
+                    <option value="publish">直接发布上线</option>
                 </select>
             </div>
 
-            <!-- 将按钮推到面板最底部 -->
             <button type="button" class="submit-btn" id="publish-btn" style="background-color: var(--success); margin-top: auto; padding: 15px; font-size: 1.05rem;">
                 ✅ 一键同步至网站
             </button>
@@ -148,7 +179,31 @@
 </div>
 
 <script>
-    // 1. 黑白模式切换
+    // ==========================================
+    // 0. 全局 Toast 提示系统 (彻底替代 alert)
+    // ==========================================
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let iconHtml = '💡';
+        if (type === 'success') iconHtml = '✅';
+        if (type === 'error') iconHtml = '❌';
+        if (type === 'info') iconHtml = '⏳'; 
+
+        toast.innerHTML = `<span style="font-size: 1.2rem;">${iconHtml}</span><span>${message}</span>`;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => toast.classList.add('show'));
+
+        const duration = type === 'error' ? 5000 : 3500;
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400); 
+        }, duration);
+    }
+
     const themeBtn = document.getElementById('theme-btn');
     themeBtn.onclick = () => {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -157,21 +212,19 @@
     };
 
     // ==========================================
-    // 2. 图片预览处理 (支持追加、大图预览、点击删除)
+    // 2. 图片上传及预览逻辑
     // ==========================================
     let base64Files = []; 
     const MAX_IMAGES = 5; 
 
-    // 创建大图预览遮罩层
+    // 大图预览弹窗
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px);';
     const largeImg = document.createElement('img');
     largeImg.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);';
     const closeBtn = document.createElement('span');
     closeBtn.innerHTML = '×';
-    closeBtn.style.cssText = 'position: absolute; top: 30px; right: 40px; color: #fff; font-size: 50px; cursor: pointer; transition: transform 0.2s;';
-    closeBtn.onmouseover = () => closeBtn.style.transform = 'scale(1.2)';
-    closeBtn.onmouseout = () => closeBtn.style.transform = 'scale(1)';
+    closeBtn.style.cssText = 'position: absolute; top: 30px; right: 40px; color: #fff; font-size: 50px; cursor: pointer;';
     overlay.appendChild(largeImg);
     overlay.appendChild(closeBtn);
     document.body.appendChild(overlay);
@@ -180,21 +233,18 @@
 
     document.getElementById('images').onchange = async (e) => {
         const newFiles = Array.from(e.target.files);
-        
         if (base64Files.length + newFiles.length > MAX_IMAGES) {
-            alert(`最多只能上传 ${MAX_IMAGES} 张图片！您还可以继续上传 ${MAX_IMAGES - base64Files.length} 张。`);
+            showToast(`最多只能上传 ${MAX_IMAGES} 张图片！`, 'error');
             e.target.value = ''; 
             return;
         }
 
         const previewArea = document.getElementById('preview-area');
-
         const newBase64Promises = newFiles.map(file => {
             return new Promise(resolve => {
                 const reader = new FileReader();
                 reader.onload = (ex) => {
                     const base64String = ex.target.result;
-                    
                     const imgContainer = document.createElement('div');
                     imgContainer.style.cssText = 'position: relative; display: inline-block;';
                     
@@ -202,26 +252,17 @@
                     img.src = base64String; 
                     img.className = 'preview-img';
                     img.style.cursor = 'zoom-in';
-                    img.title = "点击查看大图";
 
                     const deleteBtn = document.createElement('span');
                     deleteBtn.innerHTML = '×';
-                    deleteBtn.style.cssText = 'position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: background 0.2s;';
-                    deleteBtn.title = "删除图片";
-                    deleteBtn.onmouseover = () => deleteBtn.style.background = '#dc2626';
-                    deleteBtn.onmouseout = () => deleteBtn.style.background = '#ef4444';
+                    deleteBtn.style.cssText = 'position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 14px; font-weight: bold;';
 
-                    img.onclick = () => {
-                        largeImg.src = base64String;
-                        overlay.style.display = 'flex';
-                    };
+                    img.onclick = () => { largeImg.src = base64String; overlay.style.display = 'flex'; };
 
                     deleteBtn.onclick = (event) => {
                         event.stopPropagation(); 
                         const index = base64Files.indexOf(base64String);
-                        if (index > -1) {
-                            base64Files.splice(index, 1); 
-                        }
+                        if (index > -1) base64Files.splice(index, 1); 
                         imgContainer.remove(); 
                     };
 
@@ -240,17 +281,11 @@
     };
 
     // ==========================================
-    // 3. 进度条动画控制
+    // 3. 进度条动画
     // ==========================================
     let simInterval;
     function startProgressSimulation() {
-        const steps = [
-            { id: 1, duration: 3000 },
-            { id: 2, duration: 35000 },
-            { id: 3, duration: 5000 },
-            { id: 4, duration: 40000 },
-            { id: 5, duration: 5000 }
-        ];
+        const steps = [{id:1,duration:3000},{id:2,duration:35000},{id:3,duration:5000},{id:4,duration:40000},{id:5,duration:5000}];
         let currentStep = 0;
         const advanceStep = () => {
             if(currentStep > 0) {
@@ -266,113 +301,126 @@
         };
         advanceStep();
     }
-
     function completeAllSteps() {
         clearTimeout(simInterval);
         for(let i=1; i<=5; i++) {
             const el = document.getElementById(`step-${i}`);
-            el.classList.remove('active'); el.classList.add('done');
-            el.querySelector('.step-icon').innerHTML = '✓';
+            el.classList.remove('active'); el.classList.add('done'); el.querySelector('.step-icon').innerHTML = '✓';
         }
     }
-
     function resetSteps() {
         clearTimeout(simInterval);
         for(let i=1; i<=5; i++) {
             const el = document.getElementById(`step-${i}`);
-            el.classList.remove('active', 'done');
-            el.querySelector('.step-icon').innerHTML = i;
+            el.classList.remove('active', 'done'); el.querySelector('.step-icon').innerHTML = i;
         }
     }
 
     // ==========================================
-    // 4. 局部重绘功能 (注入重绘按钮与调用迷你工作流)
+    // 4. 局部重绘功能 (100% 绑定自定义 Dialog，彻底消灭 prompt)
     // ==========================================
     function bindRegenButtons() {
         const previewBox = document.getElementById('preview-box');
-        
-        // 自动防呆机制：如果返回的 img 没有被 div 包裹，自动套上 Wrapper
         const rawImages = previewBox.querySelectorAll('img');
+        
         rawImages.forEach((img, idx) => {
             if (!img.parentElement.classList.contains('ai-image-wrapper')) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'ai-image-wrapper';
-                wrapper.style.cssText = 'position: relative; display: inline-block; width: 100%;';
-                // 挪动节点
+                wrapper.style.cssText = 'position: relative; display: block; width: 100%; margin: 30px auto; text-align: center;';
                 img.parentNode.insertBefore(wrapper, img);
                 wrapper.appendChild(img);
-                
-                // 赋予默认的 prompt 以防为空
-                if (!img.hasAttribute('data-prompt')) {
-                    img.setAttribute('data-prompt', `AI Generated Image ${idx + 1}`);
-                }
+                if (!img.hasAttribute('data-prompt')) img.setAttribute('data-prompt', `AI Generated Image ${idx + 1}`);
             }
         });
 
-        // 给每个 Wrapper 绑定悬浮按钮
         const wrappers = previewBox.querySelectorAll('.ai-image-wrapper');
         wrappers.forEach(wrapper => {
-            if (wrapper.querySelector('.regen-btn')) return; // 避免重复添加
+            if (wrapper.querySelector('.regen-btn')) return;
 
             const img = wrapper.querySelector('img');
-            
             const regenBtn = document.createElement('button');
             regenBtn.className = 'regen-btn';
             regenBtn.innerHTML = '🔄 重新生成此图';
-            regenBtn.style.cssText = 'position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.75); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 13px; opacity: 0.85; transition: opacity 0.3s; z-index: 10; font-weight: bold; backdrop-filter: blur(4px); box-shadow: 0 4px 6px rgba(0,0,0,0.3);';
+            regenBtn.style.cssText = 'position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.75); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 13px; opacity: 0.85; z-index: 10; font-weight: bold; backdrop-filter: blur(4px); transition: 0.3s;';
 
             wrapper.onmouseenter = () => regenBtn.style.opacity = '1';
             wrapper.onmouseleave = () => regenBtn.style.opacity = '0.85';
 
-            regenBtn.onclick = async () => {
-                const originalPrompt = img.getAttribute('data-prompt') || '';
-                const newPrompt = prompt("确认或修改重绘提示词：", originalPrompt);
-                if (!newPrompt) return; 
+            // 【核心修复：弹出优美的自定义层，而不是系统自带的 prompt】
+            regenBtn.onclick = () => {
+                const dialog = document.getElementById('regen-dialog');
+                const input = document.getElementById('regen-prompt-input');
+                const cancelBtn = document.getElementById('regen-cancel');
+                const confirmBtn = document.getElementById('regen-confirm');
+                
+                input.value = img.getAttribute('data-prompt') || '';
+                
+                // 显示弹窗动画
+                dialog.style.display = 'flex';
+                requestAnimationFrame(() => {
+                    dialog.style.opacity = '1';
+                    dialog.querySelector('.dialog-box').style.transform = 'scale(1)';
+                });
+                input.focus();
 
-                regenBtn.innerHTML = '⏳ 正在拼命重绘...';
-                regenBtn.disabled = true;
-                img.style.opacity = '0.4';
-                img.style.filter = 'blur(2px)';
-                img.style.transition = '0.3s';
+                // 关闭函数
+                const closeDialog = () => {
+                    dialog.style.opacity = '0';
+                    dialog.querySelector('.dialog-box').style.transform = 'scale(0.9)';
+                    setTimeout(() => dialog.style.display = 'none', 300);
+                    cancelBtn.onclick = null;
+                    confirmBtn.onclick = null;
+                };
 
-                try {
-                    // 【迷你重绘工作流的 Webhook URL】
-                    const REGEN_URL = "https://api.wallyai.top/webhook/regen-single-image";
+                cancelBtn.onclick = closeDialog;
+
+                // 确认重绘
+                confirmBtn.onclick = async () => {
+                    const newPrompt = input.value.trim();
+                    if (!newPrompt) return showToast("重绘提示词不能为空！", "error");
                     
-                    const res = await fetch(REGEN_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            prompt: newPrompt,
-                            reference_images: base64Files // 自动带上左侧面板已上传的垫图
-                        })
-                    });
+                    closeDialog(); 
 
-                    if (res.ok) {
-                        const data = await res.json();
-                        // 兼容不同层级的 JSON 返回格式
-                        const newUrl = (Array.isArray(data) ? data[0] : data).data[0].url;
-                        img.src = newUrl;
-                        img.setAttribute('data-prompt', newPrompt);
-                    } else {
-                        alert("重绘失败，服务器状态码：" + res.status);
+                    regenBtn.innerHTML = '⏳ 正在拼命重绘...';
+                    regenBtn.disabled = true;
+                    img.style.opacity = '0.4';
+                    img.style.filter = 'blur(2px)';
+                    showToast("已下发重绘指令，请耐心等待...", "info");
+
+                    try {
+                        const REGEN_URL = "https://api.wallyai.top/webhook/regen-single-image";
+                        const res = await fetch(REGEN_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ prompt: newPrompt, reference_images: base64Files })
+                        });
+
+                        if (res.ok) {
+                            const data = await res.json();
+                            const newUrl = (Array.isArray(data) ? data[0] : data).data[0].url;
+                            img.src = newUrl;
+                            img.setAttribute('data-prompt', newPrompt);
+                            showToast("✨ 图像重绘成功！", "success");
+                        } else {
+                            showToast(`重绘失败，服务器状态码：${res.status}`, "error");
+                        }
+                    } catch (err) {
+                        showToast(`网络错误：${err.message}`, "error");
+                    } finally {
+                        regenBtn.innerHTML = '🔄 重新生成此图';
+                        regenBtn.disabled = false;
+                        img.style.opacity = '1';
+                        img.style.filter = 'none';
                     }
-                } catch (err) {
-                    alert("网络错误：" + err.message);
-                } finally {
-                    regenBtn.innerHTML = '🔄 重新生成此图';
-                    regenBtn.disabled = false;
-                    img.style.opacity = '1';
-                    img.style.filter = 'none';
-                }
+                };
             };
-
             wrapper.appendChild(regenBtn);
         });
     }
 
     // ==========================================
-    // 5. 主表单提交核心逻辑
+    // 5. 生成文章核心逻辑
     // ==========================================
     document.getElementById('article-form').onsubmit = async (e) => {
         e.preventDefault();
@@ -383,11 +431,10 @@
         previewBox.innerHTML = '<div class="placeholder-text"><div style="font-size:2rem; margin-bottom:15px;">⏳</div>正在耐心等待AI深度思考与图文合成...</div>';
         resetSteps();
         startProgressSimulation();
+        showToast("AI内容引擎已启动，预计耗时 1~2 分钟...", "info");
         
         try {
-            // 【主工作流的 Webhook URL】
             const MAIN_WEBHOOK_URL = "https://api.wallyai.top/webhook/article-gen";
-
             const response = await fetch(MAIN_WEBHOOK_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -405,45 +452,30 @@
                 completeAllSteps(); 
                 
                 let finalHtml = "";
-                if (Array.isArray(data) && data.length > 0) {
-                    finalHtml = data[0].final_article_html || "";
-                } else if (data && typeof data === 'object') {
-                    finalHtml = data.final_article_html || "";
-                }
-
-                if (!finalHtml) {
-                     finalHtml = "<p>数据获取成功，但未能在 JSON 中找到 final_article_html 字段。</p>";
-                }
+                if (Array.isArray(data) && data.length > 0) finalHtml = data[0].final_article_html || "";
+                else if (data && typeof data === 'object') finalHtml = data.final_article_html || "";
+                if (!finalHtml) finalHtml = "<p>数据获取成功，但未能在 JSON 中找到内容。</p>";
 
                 finalHtml = finalHtml.replace(/\\n/g, '').replace(/\n/g, ''); 
                 previewBox.innerHTML = finalHtml;
+                showToast("🎉 文章创作完成，请预览效果！", "success");
                 
-                // 【核心：渲染文章后立即绑定重绘按钮】
                 setTimeout(() => bindRegenButtons(), 100); 
-
             } else {
                 throw new Error(`HTTP 状态码: ${response.status}`);
             }
         } catch (error) {
             clearTimeout(simInterval);
-            let errorMsg = error.message;
-            if (error.message.includes('Failed to fetch')) {
-                errorMsg = `网络请求超时或连接被强制切断。<br><br>建议：请检查代理服务器配置，或稍后重试。`
-            }
-            previewBox.innerHTML = `<div class="placeholder-text" style="color:#ef4444; text-align:left; font-size: 1rem; width: 80%;">
-                <b>❌ 生成失败:</b><br><br>${errorMsg}
-            </div>`;
-            
-            document.querySelectorAll('.step.active .step-icon').forEach(el => {
-                el.style.backgroundColor = '#ef4444'; el.style.animation = 'none';
-            });
+            previewBox.innerHTML = `<div class="placeholder-text" style="color:#ef4444; text-align:left; font-size: 1rem; width: 80%;"><b>❌ 生成失败:</b><br><br>${error.message}</div>`;
+            showToast("生成失败，请检查网络或配置", "error");
+            document.querySelectorAll('.step.active .step-icon').forEach(el => { el.style.backgroundColor = '#ef4444'; el.style.animation = 'none'; });
         } finally {
             btn.disabled = false; btn.textContent = "🚀 深度思考并生成";
         }
     };
     
     // ==========================================
-    // 6. 一键发布到 WordPress 逻辑
+    // 6. 自动化分发逻辑 (Respond to Webhook 高级解析版)
     // ==========================================
     document.getElementById('publish-btn').onclick = async () => {
         const title = document.getElementById('topic').value;
@@ -451,64 +483,79 @@
         const postStatus = document.getElementById('wp-status').value;
         const previewBox = document.getElementById('preview-box');
         
-        // 简单防呆验证
         if (!title || previewBox.innerText.includes('填写左侧信息')) {
-            alert('❌ 无法发布：请先生成文章！');
-            return;
+            return showToast('❌ 无法发布：请先生成文章！', 'error');
         }
 
         const publishBtn = document.getElementById('publish-btn');
         publishBtn.disabled = true;
-        publishBtn.innerHTML = '⏳ 正在拼命同步中...';
+        publishBtn.innerHTML = '⏳ 等待 n8n 处理并返回结果...';
+        showToast(`正在向 ${targetSite} 传输数据并处理图片，请勿关闭页面...`, 'info');
 
         try {
-            // 【核心防御】：克隆一份当前的 HTML，并删掉里面的“重绘按钮”，防止把管理按钮代码发到网站上
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = previewBox.innerHTML;
             const regenButtons = tempDiv.querySelectorAll('.regen-btn');
             regenButtons.forEach(btn => btn.remove());
 
-          // 【新增样式注入】：暴力覆写所有图片的自带样式，强制 WordPress 居中
             const publishImages = tempDiv.querySelectorAll('img');
             publishImages.forEach(img => {
-                // 1. 添加 WordPress 官方默认的居中 class
                 img.classList.add('aligncenter');
-                
-                // 2. 暴力追加内联样式，用 !important 无视并覆盖原有错误样式
                 img.style.cssText += 'display: block !important; margin: 30px auto !important; text-align: center;';
-                
-                // 3. 处理外层包裹 div (如果有的话)
                 if (img.parentElement && img.parentElement.classList.contains('ai-image-wrapper')) {
                     img.parentElement.style.cssText += 'display: block !important; margin: 30px auto !important; text-align: center;';
                 }
             });
             
             const cleanHtmlToPublish = tempDiv.innerHTML;
-
-            // 【新的发布专用 Webhook URL，请在 n8n 建立对应的工作流】
             const PUBLISH_WEBHOOK_URL = "https://api.wallyai.top/webhook/publish-to-wp";
 
             const res = await fetch(PUBLISH_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    site_id: targetSite,
-                    post_status: postStatus, // draft 还是 publish
-                    post_title: title,
-                    post_content: cleanHtmlToPublish
-                })
+                body: JSON.stringify({ site_id: targetSite, post_status: postStatus, post_title: title, post_content: cleanHtmlToPublish })
             });
 
+            // 【第一层判断】：网络 HTTP 状态 (信送到了吗？)
             if (res.ok) {
-                alert(`🎉 成功！文章已同步至 ${targetSite}。状态：${postStatus === 'draft' ? '草稿' : '已发布上线'}`);
+                let responseData = {};
+                try {
+                    // 拆开包裹，解析 n8n Respond to Webhook 节点返回的 JSON
+                    responseData = await res.json();
+                } catch (e) {
+                    console.warn("未返回标准JSON，采用兜底处理");
+                    responseData = { status: 'success' }; 
+                }
+
+                // 【第二层判断】：业务逻辑状态 (WordPress 接收成功了吗？)
+                // 兼容判断：只要你返回了 status: 'success'，或者 WP 原生返回了文章 id，都算成功
+                if (responseData.status === 'success' || responseData.id) {
+                    const statusText = postStatus === 'draft' ? '草稿' : '已发布';
+                    let successMsg = `🎉 同步至 ${targetSite} 成功 (${statusText})！`;
+                    
+                    // 如果 n8n 传回了文章的链接 (wp_url)，在 Toast 里加一个可点击的查看按钮！
+                    if (responseData.wp_url || responseData.link) {
+                        const targetUrl = responseData.wp_url || responseData.link;
+                        successMsg += ` <a href="${targetUrl}" target="_blank" style="color:white; text-decoration:underline; margin-left:10px;">👁️ 查看文章</a>`;
+                    }
+
+                    showToast(successMsg, 'success');
+                    publishBtn.innerHTML = '✅ 同步成功';
+                    setTimeout(() => { publishBtn.innerHTML = '✅ 一键同步至网站'; }, 3000);
+                } else {
+                    // 业务驳回：比如在 n8n 里面判断到了错误，返回了 status: 'error'
+                    showToast(`业务驳回: ${responseData.message || 'WordPress 未返回成功确认'}`, 'error');
+                    publishBtn.innerHTML = '❌ 同步失败，点击重试';
+                }
             } else {
-                alert(`发布失败，服务器状态码: ${res.status}`);
+                showToast(`发布失败，n8n 拦截响应: ${res.status}`, 'error');
+                publishBtn.innerHTML = '❌ 网络请求失败，点击重试';
             }
         } catch (err) {
-            alert(`网络错误: ${err.message}`);
+            showToast(`网络中断或 n8n 超时: ${err.message}`, 'error');
+            publishBtn.innerHTML = '❌ 网络断开，点击重试';
         } finally {
             publishBtn.disabled = false;
-            publishBtn.innerHTML = '✅ 一键同步至网站';
         }
     };
 </script>
