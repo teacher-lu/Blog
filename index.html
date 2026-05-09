@@ -64,9 +64,54 @@
         #preview-box a:hover { text-decoration: underline; }
         
         .placeholder-text { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: var(--text-muted); text-align: center; font-size: 1.1rem; }
+
+        /* ==========================================
+           新增组件：Toast 提示框 & Dialog 弹窗
+           ========================================== */
+        
+        /* Toast 提示 */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background-color: var(--panel-bg); color: var(--text-main); padding: 16px 24px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 0.95rem; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s; opacity: 0; border-left: 4px solid transparent; }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.success { border-left-color: var(--success); }
+        .toast.success .icon { color: var(--success); font-size: 1.2rem; }
+        .toast.error { border-left-color: #ef4444; }
+        .toast.error .icon { color: #ef4444; font-size: 1.2rem; }
+        .toast.info { border-left-color: var(--primary); }
+        .toast.info .icon { color: var(--primary); font-size: 1.2rem; }
+
+        /* Dialog 弹窗 */
+        .dialog-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: opacity 0.3s; }
+        .dialog-box { background: var(--panel-bg); border-radius: 12px; padding: 30px; width: 90%; max-width: 500px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid var(--border-color); }
+        .dialog-box h3 { margin-top: 0; margin-bottom: 10px; color: var(--text-main); font-size: 1.3rem; }
+        .dialog-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+        .dialog-input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem; margin-bottom: 25px; resize: vertical; min-height: 100px; font-family: inherit; line-height: 1.5; }
+        .dialog-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+        .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; }
+        .dialog-btn { padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; font-size: 0.95rem; }
+        .btn-cancel { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+        .btn-cancel:hover { background: var(--bg-color); color: var(--text-main); }
+        .btn-confirm { background: var(--primary); color: white; }
+        .btn-confirm:hover { background: var(--primary-hover); }
     </style>
 </head>
 <body>
+
+<!-- 全局 Toast 容器 -->
+<div id="toast-container"></div>
+
+<!-- 局部重绘弹窗 -->
+<div class="dialog-overlay" id="regen-dialog">
+    <div class="dialog-box">
+        <h3>✨ 重新绘制此配图</h3>
+        <p>请在下方修改您的提示词 (Prompt)，AI 将结合您的左侧垫图风格重新生成图像。</p>
+        <textarea id="regen-prompt-input" class="dialog-input" placeholder="输入新的重绘提示词..."></textarea>
+        <div class="dialog-actions">
+            <button class="dialog-btn btn-cancel" id="regen-cancel">取消重绘</button>
+            <button class="dialog-btn btn-confirm" id="regen-confirm">🚀 开始重绘</button>
+        </div>
+    </div>
+</div>
 
 <div class="dashboard">
     <div class="panel">
@@ -125,9 +170,7 @@
                     <option value="palficab">Palficab</option>
                     <option value="homeoun">Homeoun</option>
                     <option value="hsuglobal">Hsuglobal</option>
-                    <!-- <option value="hsushop">HsuShop</option> -->
                     <option value="bagorganizersshop">Bagorganizersshop</option>
-                    
                 </select>
             </div>
             
@@ -148,6 +191,33 @@
 </div>
 
 <script>
+    // ==========================================
+    // 0. 全局 Toast 提示系统
+    // ==========================================
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let iconHtml = '💡';
+        if (type === 'success') iconHtml = '✅';
+        if (type === 'error') iconHtml = '❌';
+        if (type === 'info') iconHtml = '⏳'; // 用沙漏表示处理中
+
+        toast.innerHTML = `<span class="icon">${iconHtml}</span><span>${message}</span>`;
+        container.appendChild(toast);
+
+        // 触发动画
+        requestAnimationFrame(() => toast.classList.add('show'));
+
+        // 3.5秒后自动销毁 (错误信息保留长一点，5秒)
+        const duration = type === 'error' ? 5000 : 3500;
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400); // 等待淡出动画结束
+        }, duration);
+    }
+
     // 1. 黑白模式切换
     const themeBtn = document.getElementById('theme-btn');
     themeBtn.onclick = () => {
@@ -182,7 +252,7 @@
         const newFiles = Array.from(e.target.files);
         
         if (base64Files.length + newFiles.length > MAX_IMAGES) {
-            alert(`最多只能上传 ${MAX_IMAGES} 张图片！您还可以继续上传 ${MAX_IMAGES - base64Files.length} 张。`);
+            showToast(`最多只能上传 ${MAX_IMAGES} 张图片！您还可以继续上传 ${MAX_IMAGES - base64Files.length} 张。`, 'error');
             e.target.value = ''; 
             return;
         }
@@ -286,7 +356,7 @@
     }
 
     // ==========================================
-    // 4. 局部重绘功能 (注入重绘按钮与调用迷你工作流)
+    // 4. 局部重绘功能 (Dialog 重构版)
     // ==========================================
     function bindRegenButtons() {
         const previewBox = document.getElementById('preview-box');
@@ -297,7 +367,7 @@
             if (!img.parentElement.classList.contains('ai-image-wrapper')) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'ai-image-wrapper';
-                wrapper.style.cssText = 'position: relative; display: inline-block; width: 100%;';
+                wrapper.style.cssText = 'position: relative; display: block; width: 100%; margin: 30px auto; text-align: center;';
                 // 挪动节点
                 img.parentNode.insertBefore(wrapper, img);
                 wrapper.appendChild(img);
@@ -324,47 +394,83 @@
             wrapper.onmouseenter = () => regenBtn.style.opacity = '1';
             wrapper.onmouseleave = () => regenBtn.style.opacity = '0.85';
 
-            regenBtn.onclick = async () => {
-                const originalPrompt = img.getAttribute('data-prompt') || '';
-                const newPrompt = prompt("确认或修改重绘提示词：", originalPrompt);
-                if (!newPrompt) return; 
+            regenBtn.onclick = () => {
+                // 打开自定义 Dialog
+                const dialog = document.getElementById('regen-dialog');
+                const input = document.getElementById('regen-prompt-input');
+                const cancelBtn = document.getElementById('regen-cancel');
+                const confirmBtn = document.getElementById('regen-confirm');
+                
+                // 填入现有的 prompt
+                input.value = img.getAttribute('data-prompt') || '';
+                
+                // 显示弹窗并附带动画
+                dialog.style.display = 'flex';
+                requestAnimationFrame(() => {
+                    dialog.style.opacity = '1';
+                    dialog.querySelector('.dialog-box').style.transform = 'scale(1)';
+                });
+                input.focus();
 
-                regenBtn.innerHTML = '⏳ 正在拼命重绘...';
-                regenBtn.disabled = true;
-                img.style.opacity = '0.4';
-                img.style.filter = 'blur(2px)';
-                img.style.transition = '0.3s';
+                // 关闭弹窗的封装函数
+                const closeDialog = () => {
+                    dialog.style.opacity = '0';
+                    dialog.querySelector('.dialog-box').style.transform = 'scale(0.9)';
+                    setTimeout(() => dialog.style.display = 'none', 300);
+                    // 清理事件监听，防止多次绑定
+                    cancelBtn.onclick = null;
+                    confirmBtn.onclick = null;
+                };
 
-                try {
-                    // 【迷你重绘工作流的 Webhook URL】
-                    const REGEN_URL = "https://api.wallyai.top/webhook/regen-single-image";
-                    
-                    const res = await fetch(REGEN_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            prompt: newPrompt,
-                            reference_images: base64Files // 自动带上左侧面板已上传的垫图
-                        })
-                    });
+                cancelBtn.onclick = closeDialog;
 
-                    if (res.ok) {
-                        const data = await res.json();
-                        // 兼容不同层级的 JSON 返回格式
-                        const newUrl = (Array.isArray(data) ? data[0] : data).data[0].url;
-                        img.src = newUrl;
-                        img.setAttribute('data-prompt', newPrompt);
-                    } else {
-                        alert("重绘失败，服务器状态码：" + res.status);
+                // 确认重绘核心逻辑
+                confirmBtn.onclick = async () => {
+                    const newPrompt = input.value.trim();
+                    if (!newPrompt) {
+                        return showToast("重绘提示词不能为空！", "error");
                     }
-                } catch (err) {
-                    alert("网络错误：" + err.message);
-                } finally {
-                    regenBtn.innerHTML = '🔄 重新生成此图';
-                    regenBtn.disabled = false;
-                    img.style.opacity = '1';
-                    img.style.filter = 'none';
-                }
+                    
+                    closeDialog(); // 关闭弹窗
+
+                    regenBtn.innerHTML = '⏳ 正在拼命重绘...';
+                    regenBtn.disabled = true;
+                    img.style.opacity = '0.4';
+                    img.style.filter = 'blur(2px)';
+                    img.style.transition = '0.3s';
+                    
+                    showToast("已下发图像重绘指令，请耐心等待...", "info");
+
+                    try {
+                        const REGEN_URL = "https://api.wallyai.top/webhook/regen-single-image";
+                        
+                        const res = await fetch(REGEN_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                prompt: newPrompt,
+                                reference_images: base64Files
+                            })
+                        });
+
+                        if (res.ok) {
+                            const data = await res.json();
+                            const newUrl = (Array.isArray(data) ? data[0] : data).data[0].url;
+                            img.src = newUrl;
+                            img.setAttribute('data-prompt', newPrompt);
+                            showToast("✨ 图像重绘成功！", "success");
+                        } else {
+                            showToast(`重绘失败，服务器状态码：${res.status}`, "error");
+                        }
+                    } catch (err) {
+                        showToast(`网络错误：${err.message}`, "error");
+                    } finally {
+                        regenBtn.innerHTML = '🔄 重新生成此图';
+                        regenBtn.disabled = false;
+                        img.style.opacity = '1';
+                        img.style.filter = 'none';
+                    }
+                };
             };
 
             wrapper.appendChild(regenBtn);
@@ -383,9 +489,9 @@
         previewBox.innerHTML = '<div class="placeholder-text"><div style="font-size:2rem; margin-bottom:15px;">⏳</div>正在耐心等待AI深度思考与图文合成...</div>';
         resetSteps();
         startProgressSimulation();
+        showToast("AI内容引擎已启动，预计耗时 1~2 分钟...", "info");
         
         try {
-            // 【主工作流的 Webhook URL】
             const MAIN_WEBHOOK_URL = "https://api.wallyai.top/webhook/article-gen";
 
             const response = await fetch(MAIN_WEBHOOK_URL, {
@@ -417,6 +523,7 @@
 
                 finalHtml = finalHtml.replace(/\\n/g, '').replace(/\n/g, ''); 
                 previewBox.innerHTML = finalHtml;
+                showToast("🎉 文章创作完成，请预览效果！", "success");
                 
                 // 【核心：渲染文章后立即绑定重绘按钮】
                 setTimeout(() => bindRegenButtons(), 100); 
@@ -433,6 +540,7 @@
             previewBox.innerHTML = `<div class="placeholder-text" style="color:#ef4444; text-align:left; font-size: 1rem; width: 80%;">
                 <b>❌ 生成失败:</b><br><br>${errorMsg}
             </div>`;
+            showToast("生成失败，请检查网络或配置", "error");
             
             document.querySelectorAll('.step.active .step-icon').forEach(el => {
                 el.style.backgroundColor = '#ef4444'; el.style.animation = 'none';
@@ -443,7 +551,7 @@
     };
     
     // ==========================================
-    // 6. 一键发布到 WordPress 逻辑
+    // 6. 一键发布到 WordPress 逻辑 (真实异步等待版)
     // ==========================================
     document.getElementById('publish-btn').onclick = async () => {
         const title = document.getElementById('topic').value;
@@ -451,33 +559,28 @@
         const postStatus = document.getElementById('wp-status').value;
         const previewBox = document.getElementById('preview-box');
         
-        // 简单防呆验证
+        // 防呆验证
         if (!title || previewBox.innerText.includes('填写左侧信息')) {
-            alert('❌ 无法发布：请先生成文章！');
-            return;
+            return showToast('❌ 无法发布：请先在左侧配置并生成文章！', 'error');
         }
 
         const publishBtn = document.getElementById('publish-btn');
         publishBtn.disabled = true;
-        publishBtn.innerHTML = '⏳ 正在拼命同步中...';
+        publishBtn.innerHTML = '⏳ 等待服务器响应...';
+        showToast(`正在向 ${targetSite} 传输数据并处理图片，请勿关闭页面...`, 'info');
 
         try {
-            // 【核心防御】：克隆一份当前的 HTML，并删掉里面的“重绘按钮”，防止把管理按钮代码发到网站上
+            // 【核心防御】：克隆一份当前的 HTML，并删掉里面的“重绘按钮”
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = previewBox.innerHTML;
             const regenButtons = tempDiv.querySelectorAll('.regen-btn');
             regenButtons.forEach(btn => btn.remove());
 
-          // 【新增样式注入】：暴力覆写所有图片的自带样式，强制 WordPress 居中
+          // 【强力防爆注入】：暴力覆写所有图片的自带样式，强制 WordPress 居中
             const publishImages = tempDiv.querySelectorAll('img');
             publishImages.forEach(img => {
-                // 1. 添加 WordPress 官方默认的居中 class
                 img.classList.add('aligncenter');
-                
-                // 2. 暴力追加内联样式，用 !important 无视并覆盖原有错误样式
                 img.style.cssText += 'display: block !important; margin: 30px auto !important; text-align: center;';
-                
-                // 3. 处理外层包裹 div (如果有的话)
                 if (img.parentElement && img.parentElement.classList.contains('ai-image-wrapper')) {
                     img.parentElement.style.cssText += 'display: block !important; margin: 30px auto !important; text-align: center;';
                 }
@@ -485,30 +588,36 @@
             
             const cleanHtmlToPublish = tempDiv.innerHTML;
 
-            // 【新的发布专用 Webhook URL，请在 n8n 建立对应的工作流】
             const PUBLISH_WEBHOOK_URL = "https://api.wallyai.top/webhook/publish-to-wp";
 
+            // 真实的 await：阻塞执行，直到 n8n 里的节点跑完并返回响应
             const res = await fetch(PUBLISH_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     site_id: targetSite,
-                    post_status: postStatus, // draft 还是 publish
+                    post_status: postStatus,
                     post_title: title,
                     post_content: cleanHtmlToPublish
                 })
             });
 
             if (res.ok) {
-                alert(`🎉 成功！文章已同步至 ${targetSite}。状态：${postStatus === 'draft' ? '草稿' : '已发布上线'}`);
+                const statusText = postStatus === 'draft' ? '草稿' : '已上线';
+                showToast(`🎉 成功同步至 ${targetSite} (${statusText})！`, 'success');
+                publishBtn.innerHTML = '✅ 同步成功';
+                setTimeout(() => { 
+                    publishBtn.innerHTML = '✅ 一键同步至网站'; 
+                }, 3000);
             } else {
-                alert(`发布失败，服务器状态码: ${res.status}`);
+                showToast(`发布失败，n8n 返回错误状态码: ${res.status}`, 'error');
+                publishBtn.innerHTML = '❌ 同步失败，点击重试';
             }
         } catch (err) {
-            alert(`网络错误: ${err.message}`);
+            showToast(`网络中断或 n8n 超时: ${err.message}`, 'error');
+            publishBtn.innerHTML = '❌ 网络断开，点击重试';
         } finally {
             publishBtn.disabled = false;
-            publishBtn.innerHTML = '✅ 一键同步至网站';
         }
     };
 </script>
