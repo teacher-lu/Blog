@@ -467,6 +467,25 @@
             tempDiv.innerHTML = previewBox.innerHTML;
             const regenButtons = tempDiv.querySelectorAll('.regen-btn');
             regenButtons.forEach(btn => btn.remove());
+
+            // 【新增样式注入】：自动为所有图片添加居中样式，完美适配 WordPress
+            const publishImages = tempDiv.querySelectorAll('img');
+            publishImages.forEach(img => {
+                // 1. 添加 WordPress 官方默认的居中 class
+                img.classList.add('aligncenter');
+                // 2. 注入强制居中的内联样式（双重保险，无视任何主题限制）
+                img.style.display = 'block';
+                img.style.margin = '30px auto'; 
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+                
+                // 3. 如果图片外面有我们在前端加的 ai-image-wrapper 包裹层，让包裹层也居中
+                if (img.parentElement && img.parentElement.classList.contains('ai-image-wrapper')) {
+                    img.parentElement.style.textAlign = 'center';
+                    img.parentElement.style.display = 'block';
+                    img.parentElement.style.margin = '30px auto';
+                }
+            });
             
             const cleanHtmlToPublish = tempDiv.innerHTML;
 
