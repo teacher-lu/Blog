@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI SEO 自动化内容工作台</title>
+    <script>
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = './login.html'; 
+    }
+    </script>
     <style>
         :root {
             --bg-color: #f3f4f6; --panel-bg: #ffffff; --text-main: #1f2937; --text-muted: #6b7280;
