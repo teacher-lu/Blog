@@ -171,9 +171,15 @@
                 </select>
             </div>
 
-            <button type="button" class="submit-btn" id="publish-btn" style="background-color: var(--primary); margin-top: auto; padding: 15px; font-size: 1.05rem;">
-                🚀 一键同步至网站
-            </button>
+
+            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px;">
+                <button type="button" class="submit-btn" id="publish-btn" style="background-color: var(--success); margin-top: 0; padding: 15px; font-size: 1.05rem;">
+                    🚀 一键同步至网站
+                </button>
+                <a href="#" target="_blank" id="view-article-btn" class="submit-btn" style="background-color: var(--primary); margin-top: 0; padding: 15px; font-size: 1.05rem; text-decoration: none; text-align: center; display: none;">
+                    👁️ 预览已上传的文章
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -474,14 +480,15 @@
         }
     };
     
-    // ==========================================
-    // 6. 自动化分发逻辑 (Respond to Webhook 高级解析版)
+   // ==========================================
+    // 6. 自动化分发逻辑 (实体查看按钮版)
     // ==========================================
     document.getElementById('publish-btn').onclick = async () => {
         const title = document.getElementById('topic').value;
         const targetSite = document.getElementById('wp-target').value;
         const postStatus = document.getElementById('wp-status').value;
         const previewBox = document.getElementById('preview-box');
+        const viewBtn = document.getElementById('view-article-btn'); // 获取查看按钮
         
         if (!title || previewBox.innerText.includes('填写左侧信息')) {
             return showToast('❌ 无法发布：请先生成文章！', 'error');
@@ -489,7 +496,8 @@
 
         const publishBtn = document.getElementById('publish-btn');
         publishBtn.disabled = true;
-        publishBtn.innerHTML = '⏳ 请耐心等待n8n处理并返回结果...';
+        publishBtn.innerHTML = '⏳ 等待 n8n 处理并返回结果...';
+        viewBtn.style.display = 'none'; // 【新增】：每次点击发布时，先隐藏查看按钮
         showToast(`正在向 ${targetSite} 传输数据并处理图片，请勿关闭页面...`, 'info');
 
         try {
@@ -516,34 +524,30 @@
                 body: JSON.stringify({ site_id: targetSite, post_status: postStatus, post_title: title, post_content: cleanHtmlToPublish })
             });
 
-            // 【第一层判断】：网络 HTTP 状态 (信送到了吗？)
             if (res.ok) {
                 let responseData = {};
                 try {
-                    // 拆开包裹，解析 n8n Respond to Webhook 节点返回的 JSON
                     responseData = await res.json();
+                    if (Array.isArray(responseData)) responseData = responseData[0];
                 } catch (e) {
-                    console.warn("未返回标准JSON，采用兜底处理");
                     responseData = { status: 'success' }; 
                 }
 
-                // 【第二层判断】：业务逻辑状态 (WordPress 接收成功了吗？)
-                // 兼容判断：只要你返回了 status: 'success'，或者 WP 原生返回了文章 id，都算成功
+                // 【第二层判断】：业务逻辑状态
                 if (responseData.status === 'success' || responseData.id) {
                     const statusText = postStatus === 'draft' ? '草稿' : '已发布';
-                    let successMsg = `🎉 同步至 ${targetSite} 成功 (${statusText})！`;
                     
-                    // 如果 n8n 传回了文章的链接 (wp_url)，在 Toast 里加一个可点击的查看按钮！
-                    if (responseData.wp_url || responseData.link) {
-                        const targetUrl = responseData.wp_url || responseData.link;
-                        successMsg += ` <a href="${targetUrl}" target="_blank" style="color: var(--primary); font-weight: bold; text-decoration: underline; margin-left: 10px;">👁️ 查看文章</a>`;
+                    // 【核心修改】：提取真实链接并激活按钮
+                    const targetUrl = responseData.wp_url || responseData.link;
+                    if (targetUrl) {
+                        viewBtn.href = targetUrl;              // 将网址塞进按钮里
+                        viewBtn.style.display = 'block';       // 让蓝色按钮显示出来
                     }
 
-                    showToast(successMsg, 'success');
+                    showToast(`🎉 同步至 ${targetSite} 成功 (${statusText})！`, 'success');
                     publishBtn.innerHTML = '✅ 同步成功';
                     setTimeout(() => { publishBtn.innerHTML = '🚀 一键同步至网站'; }, 3000);
                 } else {
-                    // 业务驳回：比如在 n8n 里面判断到了错误，返回了 status: 'error'
                     showToast(`业务驳回: ${responseData.message || 'WordPress 未返回成功确认'}`, 'error');
                     publishBtn.innerHTML = '❌ 同步失败，点击重试';
                 }
