@@ -386,6 +386,10 @@
                     const newPrompt = input.value.trim();
                     if (!newPrompt) return showToast("重绘提示词不能为空！", "error");
                     
+                    // 【新增】：只要点击了重绘图片，说明内容变了，立刻隐藏右下角的“预览”按钮
+                    const viewBtn = document.getElementById('view-article-btn');
+                    if (viewBtn) viewBtn.style.display = 'none';
+                    
                     closeDialog(); 
 
                     regenBtn.innerHTML = '⏳ 正在拼命重绘...';
@@ -432,6 +436,10 @@
         e.preventDefault();
         const btn = document.getElementById('sub-btn');
         const previewBox = document.getElementById('preview-box');
+
+        // 【新增】：只要点击了重新生成文章，立刻隐藏右下角的“预览”按钮
+        const viewBtn = document.getElementById('view-article-btn');
+        if (viewBtn) viewBtn.style.display = 'none';
         
         btn.disabled = true; btn.textContent = "🧠 引擎高速运转中...";
         previewBox.innerHTML = '<div class="placeholder-text"><div style="font-size:2rem; margin-bottom:15px;">⏳</div>正在耐心等待AI深度思考与图文合成...</div>';
