@@ -44,9 +44,8 @@ async function sha256(message) {
 // ==========================================
 // 设置固定的账号 (明文存放)
 const VALID_USERNAME = "admin";
-// 设置固定密码的哈希值 (这里是 "123456" 的哈希值)
 // 如果你想换密码，请用我刚刚提供的工具生成新的哈希值并替换这里的内容
-const EXPECTED_HASH = "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"; 
+const EXPECTED_HASH = "b2ed6d0fc00ba9611c9963ba6c26b25c4b13829a2c8fb188b470eb21b7c7422f"; 
 
 // 等待DOM结构加载完毕后执行
 document.addEventListener('DOMContentLoaded', () => {
