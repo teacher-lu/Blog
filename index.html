@@ -171,7 +171,7 @@
                 </select>
             </div>
 
-            <button type="button" class="submit-btn" id="publish-btn" style="background-color: var(--success); margin-top: auto; padding: 15px; font-size: 1.05rem;">
+            <button type="button" class="submit-btn" id="publish-btn" style="background-color: var(--primary); margin-top: auto; padding: 15px; font-size: 1.05rem;">
                 ✅ 一键同步至网站
             </button>
         </div>
@@ -536,7 +536,7 @@
                     // 如果 n8n 传回了文章的链接 (wp_url)，在 Toast 里加一个可点击的查看按钮！
                     if (responseData.wp_url || responseData.link) {
                         const targetUrl = responseData.wp_url || responseData.link;
-                        successMsg += ` <a href="${targetUrl}" target="_blank" style="color:white; text-decoration:underline; margin-left:10px;">👁️ 查看文章</a>`;
+                        successMsg += ` <a href="${targetUrl}" target="_blank" style="color: var(--primary); font-weight: bold; text-decoration: underline; margin-left: 10px;">👁️ 查看文章</a>`;
                     }
 
                     showToast(successMsg, 'success');
