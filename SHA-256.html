@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>获取密码哈希值</title>
+    <style>
+        body { font-family: sans-serif; padding: 50px; text-align: center; }
+        input { padding: 10px; width: 200px; font-size: 16px; margin-bottom: 20px;}
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        #result { margin-top: 20px; font-family: monospace; word-break: break-all; color: #d32f2f; font-weight: bold;}
+    </style>
+</head>
+<body>
+    <h2>密码 SHA-256 哈希生成器</h2>
+    <input type="text" id="pwdInput" placeholder="输入你想要的密码">
+    <br>
+    <button onclick="generateHash()">生成哈希值</button>
+    
+    <p>请将下面这串字符复制到你的 login.js 中的 EXPECTED_HASH 里：</p>
+    <div id="result">等待生成...</div>
+
+    <script>
+        async function sha256(message) {
+            const msgUint8 = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function generateHash() {
+            const pwd = document.getElementById('pwdInput').value;
+            if(!pwd) {
+                alert("请输入密码！");
+                return;
+            }
+            const hash = await sha256(pwd);
+            document.getElementById('result').innerText = hash;
+        }
+    </script>
+</body>
+</html>
