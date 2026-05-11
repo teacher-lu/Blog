@@ -407,7 +407,7 @@
                         const REGEN_URL = "https://api.wallyai.top/webhook/regen-single-image";
                         const res = await fetch(REGEN_URL, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json','x-studio-pwd': sessionStorage.getItem('n8n_password') },
                             body: JSON.stringify({ prompt: newPrompt, reference_images: base64Files })
                         });
 
@@ -456,7 +456,7 @@
             const MAIN_WEBHOOK_URL = "https://api.wallyai.top/webhook/article-gen";
             const response = await fetch(MAIN_WEBHOOK_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json",'x-studio-pwd': sessionStorage.getItem('n8n_password') },
                 body: JSON.stringify({
                     topic: document.getElementById('topic').value,
                     keywords: document.getElementById('keywords').value,
@@ -533,7 +533,7 @@
 
             const res = await fetch(PUBLISH_WEBHOOK_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json','x-studio-pwd': sessionStorage.getItem('n8n_password') },
                 body: JSON.stringify({ site_id: targetSite, post_status: postStatus, post_title: title, post_content: cleanHtmlToPublish })
             });
 
