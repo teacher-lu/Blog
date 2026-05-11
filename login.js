@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (username === VALID_USERNAME && inputHash === EXPECTED_HASH) {
             
             // 记录登录状态到浏览器 Session (关闭网页即失效)
+            sessionStorage.setItem('n8n_password', password);
             sessionStorage.setItem('isLoggedIn', 'true');
             
             // 跳转到主页
