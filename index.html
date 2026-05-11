@@ -541,7 +541,7 @@
 
                     showToast(successMsg, 'success');
                     publishBtn.innerHTML = '✅ 同步成功';
-                    setTimeout(() => { publishBtn.innerHTML = '✅ 一键同步至网站'; }, 3000);
+                    setTimeout(() => { publishBtn.innerHTML = '🚀 一键同步至网站'; }, 3000);
                 } else {
                     // 业务驳回：比如在 n8n 里面判断到了错误，返回了 status: 'error'
                     showToast(`业务驳回: ${responseData.message || 'WordPress 未返回成功确认'}`, 'error');
