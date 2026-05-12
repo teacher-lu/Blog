@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } else {
             // 密码错误使用 Dialog 强提醒
-            showDialog('登录失败', '您输入的账号或密码不正确，请检查后重新输入。');
+            showDialog('登录失败', '您输入的账号或密码不正确，请重新输入。');
             
             // 验证失败，清空密码框方便用户重新输入
             passwordInput.value = '';
