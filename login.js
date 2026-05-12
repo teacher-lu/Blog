@@ -1,4 +1,46 @@
 // ==========================================
+// 0. 全局 UI 工具函数：Toast 和 Dialog
+// ==========================================
+const toastContainer = document.createElement('div');
+toastContainer.className = 'toast-container';
+document.body.appendChild(toastContainer);
+
+function showToast(message, type = 'error') {
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    toast.innerText = message;
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function showDialog(title, message) {
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-dialog-overlay';
+    overlay.innerHTML = `
+        <div class="custom-dialog-box">
+            <h3>${title}</h3>
+            <p>${message}</p>
+            <button class="dialog-btn">我知道了</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const btn = overlay.querySelector('.dialog-btn');
+    btn.addEventListener('click', () => {
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.remove(), 300);
+    });
+
+    setTimeout(() => overlay.classList.add('show'), 10);
+}
+
+
+// ==========================================
 // 1. 气泡背景动画逻辑
 // ==========================================
 const bubleCreate = () => {
@@ -59,13 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
 
-        // 简单的前端空值校验
+        // 使用 Toast 进行空值校验
         if (username === '') {
-            alert('请输入用户名！');
+            showToast('请输入用户名！', 'error');
             return;
         }
         if (password === '') {
-            alert('请输入密码！');
+            showToast('请输入密码！', 'error');
             return;
         }
 
@@ -75,15 +117,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // 核心验证逻辑：比对账号和密码的哈希值
         if (username === VALID_USERNAME && inputHash === EXPECTED_HASH) {
             
+            // 登录成功提示
+            showToast('登录成功！正在进入系统...', 'success');
+
             // 记录登录状态到浏览器 Session (关闭网页即失效)
             sessionStorage.setItem('n8n_password', password);
             sessionStorage.setItem('isLoggedIn', 'true');
             
-            // 跳转到主页
-            window.location.href = './index.html'; 
+            // 延迟 800 毫秒跳转，让用户看清楚成功的提示语
+            setTimeout(() => {
+                window.location.href = './index.html'; 
+            }, 800);
             
         } else {
-            alert('账号或密码错误，请重新输入！');
+            // 密码错误使用 Dialog 强提醒
+            showDialog('登录失败', '您输入的账号或密码不正确，请检查后重新输入。');
+            
             // 验证失败，清空密码框方便用户重新输入
             passwordInput.value = '';
         }
