@@ -120,19 +120,19 @@
                 <div class="form-group"><label>关键词 (Keywords) *</label><input type="text" id="keywords" placeholder="用逗号隔开" required></div>
                 <div class="form-group"><label>内链产品名称 *</label><input type="text" id="p_name" placeholder="如: Thesis Hard Cover" required></div>
                 <div class="form-group"><label>内链 URL *</label><input type="url" id="p_link" placeholder="https://..." required></div>
-                <div class="form-group">
-                    <label>参考资料图 (垫图, 最多5张)</label>
-                    <input type="file" id="images" accept="image/*" multiple style="font-size: 0.8rem; padding-bottom: 10px;">
-                    <div class="preview-grid" id="preview-area"></div>
-                </div>
-                <div class="form-group">
-                      <label for="modelChoice">选择 AI 引擎：</label>
+                  <div class="form-group">
+                      <label for="modelChoice">选择 AI 模型：</label>
                       <select id="modelChoice" name="modelChoice" class="form-control">
                       <!-- 这里的 value 必须和 n8n Switch 节点里的规则严格一致 -->
                       <option value="gemini">Gemini (推荐，支持识图配文)</option>
                       <option value="deepseek">DeepSeek (适合纯深度长文)</option>
                       </select>
                </div>
+                <div class="form-group">
+                    <label>参考资料图 (垫图, 最多5张)</label>
+                    <input type="file" id="images" accept="image/*" multiple style="font-size: 0.8rem; padding-bottom: 10px;">
+                    <div class="preview-grid" id="preview-area"></div>
+                </div>
                 <button type="submit" class="submit-btn" id="sub-btn">🚀 深度思考并生成</button>
             </form>
         </div>
