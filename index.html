@@ -125,6 +125,14 @@
                     <input type="file" id="images" accept="image/*" multiple style="font-size: 0.8rem; padding-bottom: 10px;">
                     <div class="preview-grid" id="preview-area"></div>
                 </div>
+                <div class="form-group">
+                      <label for="modelChoice">选择 AI 引擎：</label>
+                      <select id="modelChoice" name="modelChoice" class="form-control">
+                      <!-- 这里的 value 必须和 n8n Switch 节点里的规则严格一致 -->
+                      <option value="gemini">Gemini (推荐，支持识图配文)</option>
+                      <option value="deepseek">DeepSeek (适合纯深度长文)</option>
+                      </select>
+               </div>
                 <button type="submit" class="submit-btn" id="sub-btn">🚀 深度思考并生成</button>
             </form>
         </div>
@@ -462,7 +470,8 @@
                     keywords: document.getElementById('keywords').value,
                     product_name: document.getElementById('p_name').value,
                     product_link: document.getElementById('p_link').value,
-                    images: base64Files
+                    images: base64Files,
+                    model_choice: document.getElementById('modelChoice').value
                 })
             });
 
