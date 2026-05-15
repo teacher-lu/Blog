@@ -527,6 +527,8 @@
             tempDiv.innerHTML = previewBox.innerHTML;
             const regenButtons = tempDiv.querySelectorAll('.regen-btn');
             regenButtons.forEach(btn => btn.remove());
+            const h1Tags = tempDiv.querySelectorAll('h1');
+            h1Tags.forEach(h1 => h1.remove());
 
             const publishImages = tempDiv.querySelectorAll('img');
             publishImages.forEach(img => {
